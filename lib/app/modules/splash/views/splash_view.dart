@@ -7,11 +7,25 @@ class SplashView extends GetView<SplashController> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text(
-          "SMART SME",
-          style: TextStyle(fontSize: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/Smart SME Logo Design.png',
+              width: 180,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'SMART SME',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

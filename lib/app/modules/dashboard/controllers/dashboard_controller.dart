@@ -1,7 +1,11 @@
+import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart'; // Pastikan path ke app_pages benar
 
 class DashboardController extends GetxController {
+  final box = GetStorage();
+
+  var userName = "Alex".obs;
   var totalItems = "1,248".obs;
   var lowStock = 12.obs;
   var deadStock = 45.obs;
@@ -28,17 +32,35 @@ class DashboardController extends GetxController {
   ].obs;
 
   // --- FUNGSI NAVIGASI OTOMATIS ---
+  @override
+  void onInit() {
+    super.onInit();
+    final storedName = box.read('name');
+    if (storedName != null && storedName is String && storedName.isNotEmpty) {
+      userName.value = storedName;
+    }
+  }
+
   void changePage(int index) {
     if (index == 0) return; // Tetap di Dashboard
     switch (index) {
-      case 1: Get.offAllNamed(Routes.INVENTORY); break;
-      case 2: Get.offAllNamed(Routes.SCAN); break;
-      case 3: Get.offAllNamed(Routes.MARKET); break;
-      case 4: Get.offAllNamed(Routes.PROFILE); break;
+      case 1:
+        Get.offAllNamed(Routes.INVENTORY);
+        break;
+      case 2:
+        Get.offAllNamed(Routes.SCAN);
+        break;
+      case 3:
+        Get.offAllNamed(Routes.MARKET);
+        break;
+      case 4:
+        Get.offAllNamed(Routes.PROFILE);
+        break;
     }
   }
 
   void recalculateMargins() {
-    Get.snackbar("AI Engine", "Menghitung ulang margin berdasarkan harga pasar terbaru...");
+    Get.snackbar("AI Engine",
+        "Menghitung ulang margin berdasarkan harga pasar terbaru...");
   }
 }

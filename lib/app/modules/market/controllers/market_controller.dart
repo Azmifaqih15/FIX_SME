@@ -1,57 +1,65 @@
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
-import '../../../routes/app_pages.dart'; // Pastikan import rute benar
+import '../../../routes/app_pages.dart';
 
 class MarketController extends GetxController {
-  final marketHealth = "Stable".obs;
-  final marketTrend = "+2.4% vs last week".obs;
-  final priceGapsCount = 12.obs;
+  final marketHealth = "Competitive".obs;
+  final marketTrend = "+1.5% High Demand".obs;
+  final priceGapsCount = 4.obs;
 
+  // Data disesuaikan dengan koleksi T-Shirt di Inventory
   final trackedProducts = <Map<String, dynamic>>[
     {
-      "name": "Wireless Pro Headphones",
+      "name": "Heavyweight Oversize Tee",
       "status": "Competitive",
-      "shop_price": "Rp 1.250k",
-      "modal_price": "Rp 950k",
-      "shopee_price": "Rp 1.280k",
-      "tokopedia_price": "Rp 1.265k",
+      "shop_price": "Rp 150k",
+      "modal_price": "Rp 85k",
+      "shopee_price": "Rp 155k",
+      "tokopedia_price": "Rp 152k",
       "trend": "Match Market",
     },
     {
-      "name": "Smart Fit Gen 5",
+      "name": "Streetwear Boxy Tee",
       "status": "Price Gap Detected",
-      "shop_price": "Rp 2.100k",
-      "modal_price": "Rp 1.600k",
-      "shopee_price": "Rp 1.850k",
-      "tokopedia_price": "Rp 1.890k",
-      "trend": "Discount 12%",
+      "shop_price": "Rp 175k",
+      "modal_price": "Rp 95k",
+      "shopee_price": "Rp 145k",
+      "tokopedia_price": "Rp 149k",
+      "trend": "Market Drop 15%",
     },
     {
-      "name": "Power Vault 20k",
+      "name": "Essential Regular Fit",
+      "status": "Healthy Margin",
+      "shop_price": "Rp 120k",
+      "modal_price": "Rp 65k",
+      "shopee_price": "Rp 125k",
+      "tokopedia_price": "Rp 122k",
+      "trend": "Stable",
+    },
+    {
+      "name": "Athletic Fitted Tee",
       "status": "Dead Stock",
-      "shop_price": "Rp 450k",
-      "modal_price": "Rp 380k",
+      "shop_price": "Rp 110k",
+      "modal_price": "Rp 60k",
       "shopee_price": null,
       "tokopedia_price": null,
       "trend": "Clearance Suggestion",
     }
   ].obs;
 
-  // --- FUNGSI NAVIGASI OTOMATIS ---
   void changePage(int index) {
-    if (index == 3) return; // Tetap di Market
+    if (index == 3) return; 
     switch (index) {
       case 0: Get.offAllNamed(Routes.DASHBOARD); break;
       case 1: Get.offAllNamed(Routes.INVENTORY); break;
-      case 2: Get.offAllNamed(Routes.SCAN); break;
+      case 2: Get.toNamed(Routes.SCAN); break;
       case 4: Get.offAllNamed(Routes.PROFILE); break;
     }
   }
 
   void applyBulkAdjustments() {
     Get.snackbar(
-      "AI Success", 
-      "Successfully adjusted 12 product prices to match market trends.",
+      "AI Price Sync", 
+      "Successfully adjusted T-Shirt prices to remain competitive.",
       snackPosition: SnackPosition.BOTTOM,
     );
   }

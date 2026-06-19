@@ -9,219 +9,240 @@ class LoginView extends GetView<LoginController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -50,
-            right: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
-                shape: BoxShape.circle,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 60.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- HEADER UI ---
+              const SizedBox(height: 40),
+              const Text(
+                "Selamat Datang",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF111827),
+                ),
               ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 8),
+              const Text(
+                "Masukan email dan password untuk menuju dashboard.",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // --- FIELD EMAIL ---
+              const Text(
+                "Email Address",
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                onChanged: (value) => controller.email.value = value,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: "Masukan email anda",
+                  prefixIcon: const Icon(Icons.alternate_email),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // --- FIELD PASSWORD ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(height: 80),
-
                   const Text(
-                    "Welcome Back",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0D1B3E),
-                    ),
+                    "Password",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-
-                  const SizedBox(height: 8),
-
-                  const Text(
-                    "Enter your credentials to access your dashboard.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  /// EMAIL (HINT DIHAPUS)
-                  _buildLabel("Email Address"),
-                  _buildTextField(
-                    hint: "", // Kosong agar lebih clean
-                    icon: Icons.alternate_email,
-                    onChanged: (val) => controller.email.value = val,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  /// PASSWORD (HINT DIHAPUS)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildLabel("Password"),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          "Forgot password?",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  Obx(() => _buildTextField(
-                        hint: "", // Kosong agar lebih clean
-                        icon: Icons.lock_outline,
-                        isPassword: !controller.isPasswordVisible.value,
-                        onChanged: (val) =>
-                            controller.password.value = val,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            controller.isPasswordVisible.value
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: controller.togglePassword,
-                        ),
-                      )),
-
-                  const SizedBox(height: 30),
-
-                  /// LOGIN BUTTON
-                  Obx(() => SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0D1B3E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: controller.isLoading.value
-                              ? null
-                              : controller.login,
-                          child: controller.isLoading.value
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  "Login",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      )),
-
-                  const SizedBox(height: 30),
-
-                  const Center(
-                    child: Text(
-                      "OR BIOMETRIC ENTRY",
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildFaceIDButton(),
-
-                  const SizedBox(height: 30),
-
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Get.toNamed('/register'),
-                      child: const Text(
-                        "Belum punya akun? Register",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Center(
-                    child: Text(
-                      "SMART-SME V4.2.0 • PRIVACY POLICY",
-                      style:
-                          TextStyle(fontSize: 10, color: Colors.grey),
+                  TextButton(
+                    onPressed: () {
+                      Get.snackbar("Info", "Fitur lupa password belum diimplementasikan");
+                    },
+                    child: const Text(
+                      "Forgot password?",
+                      style: TextStyle(fontSize: 12, color: Colors.blue),
                     ),
                   ),
                 ],
               ),
-            ),
+              Obx(() => TextField(
+                onChanged: (value) => controller.password.value = value,
+                obscureText: !controller.isPasswordVisible.value,
+                decoration: InputDecoration(
+                  hintText: "Masukan password anda",
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      controller.isPasswordVisible.value
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () => controller.togglePasswordVisibility(),
+                  ),
+                ),
+              )),
+              const SizedBox(height: 32),
+
+              // --- TOMBOL LOGIN UTAMA ---
+              Obx(() => SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF111E38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () => controller.loginWithCredentials(),
+                  child: controller.isLoading.value
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              )),
+              const SizedBox(height: 24),
+
+              // --- PEMBATAL / DIVIDER ---
+              const Center(
+                child: Text(
+                  "OR BIOMETRIC ENTRY",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- TOMBOL FACE ID BIOMETRIK (HIDE ON WINDOWS) ---
+              if (!GetPlatform.isWindows) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF9FAFB),
+                      side: BorderSide.none,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => controller.loginWithFaceID(),
+                    icon: const Icon(Icons.face, color: Colors.black),
+                    label: const Text(
+                      "Face ID Login",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // --- TOMBOL LOGIN GOOGLE ---
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => controller.loginWithGoogle(),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/google.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "Login dengan Google",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // --- TOMBOL DEVELOPER (WINDOWS ONLY) ---
+              if (GetPlatform.isWindows) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => controller.loginAsDeveloper(),
+                    child: const Text(
+                      "Masuk sebagai Developer (Windows Only)",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+
+              // --- FOOTER REGISTER ---
+              Center(
+                child: TextButton(
+                  onPressed: () => Get.toNamed('/register'),
+                  child: const Text(
+                    "Belum punya akun? Register",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF111E38),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Center(
+                child: Text(
+                  "SMART-SME V4.2.0 • PRIVACY POLICY",
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 13,
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-    Function(String)? onChanged,
-    Widget? suffixIcon,
-  }) {
-    return TextField(
-      obscureText: isPassword,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, size: 20),
-        suffixIcon: suffixIcon,
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
-        ),
-        // Menambahkan content padding agar teks tidak terlalu menempel ke atas
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 15),
-      ),
-    );
-  }
-
-  Widget _buildFaceIDButton() {
-    return InkWell(
-      onTap: controller.loginWithFaceID,
-      child: Container(
-        height: 55,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.face, size: 24),
-            SizedBox(width: 10),
-            Text(
-              "Face ID Login",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
         ),
       ),
     );

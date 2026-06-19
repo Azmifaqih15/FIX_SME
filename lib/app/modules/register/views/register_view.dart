@@ -24,144 +24,180 @@ class RegisterView extends GetView<RegisterController> {
           'Smart-SME',
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
-        centerTitle: false, // Posisi di kiri seperti gambar
+        centerTitle: false,
         actions: [
-          const Text('Registration', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          const Center(
+            child: Text('Registration', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.grey),
             onPressed: () {},
           ),
         ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              // 📦 Card Container
-              Card(
-                elevation: 5,
-                shadowColor: Colors.black12,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Register now',
-                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryColor),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Bergabunglah dengan ribuan pemilik UMKM yang menggunakan infrastruktur cerdas kami untuk mengembangkan visi mereka.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.4),
-                      ),
-                      const SizedBox(height: 32),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // 📦 Card Container
+                          Card(
+                            elevation: 5,
+                            shadowColor: Colors.black12,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Register now',
+                                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryColor),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Bergabunglah dengan ribuan pemilik UMKM yang menggunakan infrastruktur cerdas kami untuk mengembangkan visi mereka.',
+                                    style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.4),
+                                  ),
+                                  const SizedBox(height: 32),
 
-                      // 1. FULL NAME
-                      _buildLabel('FULL NAME'),
-                      _buildTextField(controller.nameController, 'John Doe', inputFieldColor),
-                      const SizedBox(height: 20),
+                                  // 1. FULL NAME
+                                  _buildLabel('FULL NAME'),
+                                  _buildTextField(controller.nameController, 'John Doe', inputFieldColor),
+                                  const SizedBox(height: 20),
 
-                      // 2. WORK EMAIL
-                      _buildLabel('WORK EMAIL'),
-                      _buildTextField(controller.emailController, 'john@business.com', inputFieldColor),
-                      const SizedBox(height: 20),
+                                  // 2. WORK EMAIL
+                                  _buildLabel('WORK EMAIL'),
+                                  _buildTextField(controller.emailController, 'john@business.com', inputFieldColor),
+                                  const SizedBox(height: 20),
 
-                      // 3. PASSWORD
-                      _buildLabel('PASSWORD'),
-                      Obx(() => Container(
-                        decoration: BoxDecoration(
-                          color: inputFieldColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TextField(
-                          controller: controller.passwordController,
-                          obscureText: !controller.isPasswordVisible.value,
-                          decoration: InputDecoration(
-                            hintText: '••••••••••••',
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off,
-                                color: Colors.grey,
+                                  // 3. PASSWORD
+                                  _buildLabel('PASSWORD'),
+                                  Obx(() => Container(
+                                    decoration: BoxDecoration(
+                                      color: inputFieldColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: TextField(
+                                      controller: controller.passwordController,
+                                      obscureText: !controller.isPasswordVisible.value,
+                                      style: const TextStyle(color: Colors.black87, fontSize: 14),
+                                      decoration: InputDecoration(
+                                        hintText: '••••••••••••',
+                                        hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                        border: InputBorder.none,
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            controller.isPasswordVisible.value ? Icons.visibility : Icons.visibility_off,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: controller.togglePassword,
+                                        ),
+                                      ),
+                                    ),
+                                  )),
+                                  const SizedBox(height: 20),
+
+                                  // Checkbox Terms
+                                  Obx(() => Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Checkbox(
+                                          value: controller.isAgree.value,
+                                          onChanged: (val) => controller.toggleAgree(val),
+                                          activeColor: primaryColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 4.0),
+                                          child: RichText(
+                                            text: TextSpan(
+                                              style: const TextStyle(color: Colors.black54, fontSize: 12),
+                                              children: [
+                                                const TextSpan(text: 'I agree to the '),
+                                                TextSpan(
+                                                  text: 'Terms of Service',
+                                                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                                                  recognizer: TapGestureRecognizer()..onTap = () {},
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )),
+                                  const SizedBox(height: 32),
+
+                                  // Tombol Utama (Continue Registration)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 55,
+                                    child: Obx(() => ElevatedButton(
+                                      onPressed: controller.isLoading.value ? null : () => controller.registerUser(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        disabledBackgroundColor: Colors.grey.shade300,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        elevation: 0,
+                                      ),
+                                      child: controller.isLoading.value
+                                          ? const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                            )
+                                          : const Text(
+                                              'Continue Registration',
+                                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                            ),
+                                    )),
+                                  ),
+                                ],
                               ),
-                              onPressed: controller.togglePassword,
                             ),
                           ),
-                        ),
-                      )),
-                      const SizedBox(height: 20),
-
-                      // Checkbox Terms
-                      Obx(() => Row(
-                        children: [
-                          Checkbox(
-                            value: controller.isAgree.value,
-                            onChanged: (val) => controller.toggleAgree(val),
-                            activeColor: primaryColor,
-                          ),
-                          Expanded(
+                          const SizedBox(height: 24),
+                          TextButton(
+                            onPressed: () => Get.back(),
                             child: RichText(
-                              text: TextSpan(
-                                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                              text: const TextSpan(
+                                style: TextStyle(color: Colors.black54, fontSize: 14),
                                 children: [
-                                  const TextSpan(text: 'I agree to the '),
+                                  TextSpan(text: 'Sudah punya akun? '),
                                   TextSpan(
-                                    text: 'Terms of Service',
-                                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                                    recognizer: TapGestureRecognizer()..onTap = () {},
+                                    text: 'Login',
+                                    style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
                             ),
                           ),
                         ],
-                      )),
-                      const SizedBox(height: 32),
-
-                      // Continue Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: Obx(() => ElevatedButton(
-                          onPressed: controller.isLoading.value ? null : controller.register,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: controller.isLoading.value
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                                  'Continue Registration',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                        )),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => Get.back(),
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(color: Colors.black54),
-                    children: [
-                      TextSpan(text: 'Sudah punya akun? '),
-                      TextSpan(
-                        text: 'Login',
-                        style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -178,8 +214,8 @@ class RegisterView extends GetView<RegisterController> {
     );
   }
 
-  // Widget Helper untuk TextField Abu-abu
-  Widget _buildTextField(TextEditingController ctrl, String hint, Color color) {
+  // Widget Helper untuk TextField Abu-abu (Dioptimalkan)
+  Widget _buildTextField(TextEditingController ctrl, String hint, Color color, {bool isNumber = false}) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -187,6 +223,8 @@ class RegisterView extends GetView<RegisterController> {
       ),
       child: TextField(
         controller: ctrl,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: const TextStyle(color: Colors.black87, fontSize: 14), // 🔥 Memastikan teks input terlihat jelas
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),

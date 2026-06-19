@@ -7,219 +7,178 @@ class MarketView extends GetView<MarketController> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF3F51B5); 
-    const Color scaffoldBg = Color(0xFFF8F9FB);
-
     return Scaffold(
-      backgroundColor: scaffoldBg,
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
-          ),
-        ),
-        title: const Text("Market Insight", 
-          style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications_none, color: Colors.black), onPressed: () {}),
-        ],
+        title: const Text("Market Insights", 
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- SUMMARY CARDS ---
             Row(
               children: [
-                Expanded(child: _buildHeaderStat("Market Health", "Stable", "+2.4% vs last week", Colors.teal)),
+                _buildSummaryCard("Market Health", controller.marketHealth.value, Colors.green),
                 const SizedBox(width: 12),
-                Expanded(child: _buildHeaderStat("Price Gaps", "12", "Detected", Colors.red, isAlert: true)),
+                _buildSummaryCard("Price Gaps", "${controller.priceGapsCount.value} Items", Colors.orange),
               ],
             ),
-            const SizedBox(height: 20),
-            _buildAIRecommendationCard(primaryColor),
             const SizedBox(height: 25),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Tracked Products", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text("See All")),
-              ],
-            ),
-            const SizedBox(height: 10),
+
+            const Text("T-Shirt Price Monitoring", 
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
+
+            // --- LIST PRODUK MARKET ---
             Obx(() => ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: controller.trackedProducts.length,
               itemBuilder: (context, index) {
-                return _buildProductItem(controller.trackedProducts[index]);
+                var product = controller.trackedProducts[index];
+                return _buildMarketItem(product);
               },
             )),
+            
+            const SizedBox(height: 20),
+            
+            // ACTION BUTTON
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => controller.applyBulkAdjustments(),
+                icon: const Icon(Icons.sync_alt),
+                label: const Text("Sync All Prices to Market"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E293B),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
             const SizedBox(height: 100),
           ],
         ),
       ),
-      
-      // --- BOTTOM NAVIGATION DENGAN SHADOW & AUTO-NAVIGATE ---
-      bottomNavigationBar: Container(
-        height: 85,
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildSummaryCard(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, -5), // Shadow ke arah atas
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBottomNavItem(Icons.grid_view_rounded, "Dashboard", onTap: () => controller.changePage(0)),
-            _buildBottomNavItem(Icons.inventory_2_outlined, "Inventory", onTap: () => controller.changePage(1)),
-            _buildBottomNavItem(Icons.qr_code_scanner_outlined, "Scan", onTap: () => controller.changePage(2)),
-            _buildBottomNavItem(Icons.analytics_outlined, "Market", isActive: true, onTap: () => controller.changePage(3)),
-            _buildBottomNavItem(Icons.person_outline, "Profile", onTap: () => controller.changePage(4)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- HELPER UNTUK ITEM NAVIGASI ---
-  Widget _buildBottomNavItem(IconData icon, String label, {bool isActive = false, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFF1F5F9) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: isActive ? const Color(0xFF1E293B) : Colors.grey[400], size: 22),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(
-              fontSize: 10,
-              color: isActive ? const Color(0xFF1E293B) : Colors.grey[400],
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal
-            )),
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 5),
+            Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
           ],
         ),
       ),
     );
   }
 
-  // (Tetap simpan widget helper lain seperti _buildHeaderStat, _buildAIRecommendationCard, dll di sini)
-  Widget _buildHeaderStat(String label, String val, String sub, Color color, {bool isAlert = false}) {
+  Widget _buildMarketItem(Map product) {
+    bool hasGap = product['status'] == "Price Gap Detected";
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 5),
-          Text(val, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Row(children: [
-            if (isAlert) Icon(Icons.warning_amber_rounded, size: 12, color: color),
-            Text(sub, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAIRecommendationCard(Color btnColor) {
-    return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, colors: [Colors.blue[50]!, Colors.white]),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.blue[100]!),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: hasGap ? Colors.orange.withOpacity(0.5) : Colors.grey[200]!),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(Icons.auto_awesome, color: Colors.blue[700], size: 18),
-            const SizedBox(width: 8),
-            const Text("AI RECOMMENDATION", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1A237E))),
-          ]),
-          const SizedBox(height: 10),
-          const Text("We detected a 15% price gap on Electronics. Market prices on Shopee have trended upwards.", style: TextStyle(fontSize: 13, color: Colors.black87)),
-          const SizedBox(height: 15),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => controller.applyBulkAdjustments(),
-              style: ElevatedButton.styleFrom(backgroundColor: btnColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-              child: const Text("Apply Bulk Adjustments", style: TextStyle(color: Colors.white)),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductItem(Map item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(height: 50, width: 50, color: Colors.grey[200], child: const Icon(Icons.image_outlined)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text("Shop: ${item['shop_price']}  Modal: ${item['modal_price']}", style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                ]),
+              Text(product['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hasGap ? Colors.orange[50] : Colors.blue[50],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(product['status'], 
+                  style: TextStyle(fontSize: 10, color: hasGap ? Colors.orange : Colors.blue, fontWeight: FontWeight.bold)),
               ),
-              _buildBadge(item['status']),
             ],
           ),
           const Divider(height: 25),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _marketTag("S", item['shopee_price'] ?? '-', Colors.orange),
-              const SizedBox(width: 15),
-              _marketTag("T", item['tokopedia_price'] ?? '-', Colors.green),
-              const Spacer(),
-              const Text("Match Market", style: TextStyle(fontSize: 11, color: Colors.teal, fontWeight: FontWeight.bold)),
+              _priceColumn("Yours", product['shop_price'], isBold: true),
+              _priceColumn("Modal", product['modal_price'], color: Colors.grey),
+              _priceColumn("Shopee", product['shopee_price'] ?? "N/A"),
+              _priceColumn("Tokopedia", product['tokopedia_price'] ?? "N/A"),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBadge(String text) {
-    bool isGreen = text == "Competitive";
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: isGreen ? Colors.green[50] : Colors.red[50], borderRadius: BorderRadius.circular(8)),
-      child: Text(text, style: TextStyle(color: isGreen ? Colors.green : Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
+  Widget _priceColumn(String label, String price, {bool isBold = false, Color? color}) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(price, style: TextStyle(
+          fontSize: 12, 
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          color: color ?? Colors.black87
+        )),
+      ],
     );
   }
 
-  Widget _marketTag(String label, String price, Color color) {
-    return Row(
-      children: [
-        CircleAvatar(radius: 8, backgroundColor: color, child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 8))),
-        const SizedBox(width: 5),
-        Text(price, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-      ],
+  Widget _buildBottomNav() {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, -2))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navItem(Icons.grid_view_rounded, "Dashboard", 0),
+          _navItem(Icons.inventory_2_outlined, "Inventory", 1),
+          _navItem(Icons.qr_code_scanner_outlined, "Scan", 2),
+          _navItem(Icons.analytics_rounded, "Market", 3, isActive: true),
+          _navItem(Icons.person_outline, "Profile", 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, int index, {bool isActive = false}) {
+    return GestureDetector(
+      onTap: () => controller.changePage(index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isActive ? const Color(0xFF1E293B) : Colors.grey[400], size: 22),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 10, color: isActive ? const Color(0xFF1E293B) : Colors.grey[400])),
+        ],
+      ),
     );
   }
 }

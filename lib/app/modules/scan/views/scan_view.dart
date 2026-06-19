@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../controllers/scan_controller.dart';
 
 class ScanView extends GetView<ScanController> {
@@ -8,188 +9,239 @@ class ScanView extends GetView<ScanController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Inventory AI', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none, color: Colors.black))],
+        title: const Text('Scan Transaksi'),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // --- CAMERA VIEW PLACEHOLDER ---
-            Container(
-              height: 250,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(20),
-                image: const DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/400x250/000000/FFFFFF?text=Camera+Active'),
-                  fit: BoxFit.cover,
+        padding: const EdgeInsets.all(16.0),
+        child: Obx(
+          () => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Kamera Embedded
+              SizedBox(
+                height: 250,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      MobileScanner(
+                        controller: controller.mobileScannerController,
+                        onDetect: controller.onDetect,
+                      ),
+                      // Overlay scan indicator (opsional tapi bagus untuk UX)
+                      if (controller.isScanning.value)
+                        Container(
+                          color: Colors.black54,
+                          child: const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              child: Center(
-                child: Container(
-                  width: 200,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 2),
+              const SizedBox(height: 24),
+
+              // Tombol Tipe Transaksi
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: controller.transactionType.value == 'IN'
+                            ? Colors.green
+                            : Colors.grey.shade300,
+                        foregroundColor: controller.transactionType.value == 'IN'
+                            ? Colors.white
+                            : Colors.black54,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => controller.transactionType.value = 'IN',
+                      child: const Text('Stock In', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: controller.transactionType.value == 'OUT'
+                            ? Colors.red
+                            : Colors.grey.shade300,
+                        foregroundColor: controller.transactionType.value == 'OUT'
+                            ? Colors.white
+                            : Colors.black54,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => controller.transactionType.value = 'OUT',
+                      child: const Text('Stock Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Form Input: SKU
+              TextField(
+                controller: controller.skuController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'SKU / Barcode',
+                  filled: true,
+                  fillColor: Colors.grey.shade200,
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // --- STOCK ACTION BUTTONS ---
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionButton(
-                    label: "Stock In",
-                    icon: Icons.add_circle_outline,
-                    color: Colors.green[50]!,
-                    iconColor: Colors.green,
-                    onTap: controller.onStockIn,
+              // Form Input: Deskripsi
+              TextField(
+                controller: controller.descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Deskripsi Pakaian',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: _buildActionButton(
-                    label: "Stock Out",
-                    icon: Icons.remove_circle_outline,
-                    color: Colors.red[50]!,
-                    iconColor: Colors.red,
-                    onTap: controller.onStockOut,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // --- MANUAL ENTRY ---
-            const Align(alignment: Alignment.centerLeft, child: Text("Manual Entry", style: TextStyle(fontWeight: FontWeight.bold))),
-            const SizedBox(height: 10),
-            TextField(
-              controller: controller.searchController,
-              decoration: InputDecoration(
-                hintText: "Search by Name or SKU",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
               ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 16),
 
-            // --- RECENT SCANS ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Recent Scans", style: TextStyle(fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text("View All")),
-              ],
-            ),
-            Obx(() => ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.recentScans.length,
-              itemBuilder: (context, index) {
-                var item = controller.recentScans[index];
-                return ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.inventory_2_outlined),
+              // Form Input: Kategori Dropdown
+              DropdownButtonFormField<String>(
+                value: controller.selectedCategory.value,
+                decoration: InputDecoration(
+                  labelText: 'Kategori (Fit)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  title: Text(item['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  subtitle: Text(item['sku'] as String, style: const TextStyle(fontSize: 12)),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(item['qty'] as String, style: TextStyle(color: item['color'] as Color, fontWeight: FontWeight.bold)),
-                      Text(item['time'] as String, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                    ],
+                ),
+                items: controller.categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    controller.selectedCategory.value = newValue;
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Form Input: Size Dropdown
+              DropdownButtonFormField<String>(
+                value: controller.selectedSize.value,
+                decoration: InputDecoration(
+                  labelText: 'Size',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                );
-              },
-            )),
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
+                ),
+                items: controller.sizes.map((String size) {
+                  return DropdownMenuItem<String>(
+                    value: size,
+                    child: Text(size),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    controller.selectedSize.value = newValue;
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
 
-      // --- BOTTOM NAVIGATION BAR DENGAN SHADOW ---
-      bottomNavigationBar: Container(
-        height: 85,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBottomNavItem(Icons.grid_view_rounded, "Dashboard", onTap: () => controller.changePage(0)),
-            _buildBottomNavItem(Icons.inventory_2_outlined, "Inventory", onTap: () => controller.changePage(1)),
-            _buildBottomNavItem(Icons.qr_code_scanner_outlined, "Scan", isActive: true, onTap: () => controller.changePage(2)),
-            _buildBottomNavItem(Icons.analytics_outlined, "Market", onTap: () => controller.changePage(3)),
-            _buildBottomNavItem(Icons.person_outline, "Profile", onTap: () => controller.changePage(4)),
-          ],
-        ),
-      ),
-    );
-  }
+              // Form Input: Warna
+              TextField(
+                controller: controller.colorController,
+                decoration: InputDecoration(
+                  labelText: 'Warna',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
 
-  // --- HELPER UNTUK ITEM NAVIGASI ---
-  Widget _buildBottomNavItem(IconData icon, String label, {bool isActive = false, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFF1F5F9) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: isActive ? const Color(0xFF1E293B) : Colors.grey[400], size: 22),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(
-              fontSize: 10,
-              color: isActive ? const Color(0xFF1E293B) : Colors.grey[400],
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal
-            )),
-          ],
-        ),
-      ),
-    );
-  }
+              // Pengatur Qty
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Quantity:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove, color: Colors.red),
+                          onPressed: controller.decrementQty,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            '${controller.quantity.value}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.green),
+                          onPressed: controller.incrementQty,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
 
-  Widget _buildActionButton({required String label, required IconData icon, required Color color, required Color iconColor, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(15)),
-        child: Column(
-          children: [
-            Icon(icon, color: iconColor),
-            const SizedBox(height: 5),
-            Text(label, style: TextStyle(color: iconColor, fontWeight: FontWeight.bold)),
-          ],
+              // Tombol Submit Paling Bawah
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade800,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 2,
+                ),
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () {
+                        controller.submitTransaction();
+                      },
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Submit',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
