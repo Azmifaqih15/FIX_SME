@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 
 import '../modules/activity_log/bindings/activity_log_binding.dart';
 import '../modules/activity_log/views/activity_log_view.dart';
+import '../modules/business_info/bindings/business_info_binding.dart';
+import '../modules/business_info/views/business_info_view.dart';
 import '../modules/dashboard/bindings/dashboard_binding.dart';
 import '../modules/dashboard/views/dashboard_view.dart';
 import '../modules/home/views/home_view.dart';
@@ -23,6 +25,8 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/scan/bindings/scan_binding.dart';
 import '../modules/scan/views/scan_view.dart';
+import '../modules/security/bindings/security_binding.dart';
+import '../modules/security/views/security_view.dart';
 import '../modules/splash/controllers/splash_controller.dart';
 import '../modules/splash/views/splash_view.dart';
 
@@ -100,6 +104,16 @@ class AppPages {
       name: Routes.ACTIVITY_LOG,
       page: () => const ActivityLogView(),
       binding: ActivityLogBinding(),
+    ),
+    GetPage(
+      name: Routes.BUSINESS_INFO,
+      page: () => const BusinessInfoView(),
+      binding: BusinessInfoBinding(),
+    ),
+    GetPage(
+      name: _Paths.SECURITY,
+      page: () => const SecurityView(),
+      binding: SecurityBinding(),
     ),
   ];
 }

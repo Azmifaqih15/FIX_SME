@@ -32,7 +32,7 @@ class NotificationView extends GetView<NotificationController> {
           TextButton(
             onPressed: controller.markAllAsRead,
             child: const Text(
-              "Mark all read",
+              "Tandai Semua Terbaca",
               style: TextStyle(
                   color: Colors.indigo,
                   fontWeight: FontWeight.w600,

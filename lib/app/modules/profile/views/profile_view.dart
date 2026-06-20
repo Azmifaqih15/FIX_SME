@@ -170,14 +170,16 @@ class ProfileView extends GetView<ProfileController> {
                           _buildMenuTile(
                               Icons.storefront_rounded,
                               "Business Information",
-                              "Manage store & warehouse details"),
+                              "Manage store & warehouse details",
+                              onTap: () => Get.toNamed(Routes.BUSINESS_INFO)),
                           const Divider(
                               height: 1,
                               indent: 64,
                               endIndent: 24,
                               color: Color(0xFFF1F5F9)),
                           _buildMenuTile(Icons.shield_rounded, "Security",
-                              "Password, Face ID, & PIN"),
+                              "Password, Face ID, & PIN",
+                              onTap: () => Get.toNamed(Routes.SECURITY)),
                           const Divider(
                               height: 1,
                               indent: 64,
@@ -286,7 +288,6 @@ class ProfileView extends GetView<ProfileController> {
   }
 
   // WIDGET HELPER MENU
-  // 🟢 Tambahkan {VoidCallback? onTap} di dalam tanda kurung
   Widget _buildMenuTile(IconData icon, String title, String subtitle,
       {VoidCallback? onTap}) {
     return ListTile(

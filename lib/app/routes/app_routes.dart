@@ -16,6 +16,8 @@ abstract class Routes {
   static const OTP_VERIFICATION = _Paths.OTP_VERIFICATION;
   static const NOTIFICATION = '/notification';
   static const ACTIVITY_LOG = _Paths.ACTIVITY_LOG;
+  static const BUSINESS_INFO = _Paths.BUSINESS_INFO;
+  static const SECURITY = _Paths.SECURITY;
 }
 
 abstract class _Paths {
@@ -33,4 +35,6 @@ abstract class _Paths {
   static const OTP_VERIFICATION = '/otp-verification';
   static const NOTIFICATION = '/notification';
   static const ACTIVITY_LOG = '/activity-log';
+  static const BUSINESS_INFO = '/business-info';
+  static const SECURITY = '/security';
 }
