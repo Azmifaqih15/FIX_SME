@@ -36,7 +36,8 @@ class ScanView extends GetView<ScanController> {
                         Container(
                           color: Colors.black54,
                           child: const Center(
-                            child: CircularProgressIndicator(color: Colors.white),
+                            child:
+                                CircularProgressIndicator(color: Colors.white),
                           ),
                         ),
                     ],
@@ -51,38 +52,44 @@ class ScanView extends GetView<ScanController> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: controller.transactionType.value == 'IN'
-                            ? Colors.green
-                            : Colors.grey.shade300,
-                        foregroundColor: controller.transactionType.value == 'IN'
-                            ? Colors.white
-                            : Colors.black54,
+                        backgroundColor:
+                            controller.transactionType.value == 'IN'
+                                ? Colors.green
+                                : Colors.grey.shade300,
+                        foregroundColor:
+                            controller.transactionType.value == 'IN'
+                                ? Colors.white
+                                : Colors.black54,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: () => controller.transactionType.value = 'IN',
-                      child: const Text('Stock In', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Stock In',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: controller.transactionType.value == 'OUT'
-                            ? Colors.red
-                            : Colors.grey.shade300,
-                        foregroundColor: controller.transactionType.value == 'OUT'
-                            ? Colors.white
-                            : Colors.black54,
+                        backgroundColor:
+                            controller.transactionType.value == 'OUT'
+                                ? Colors.red
+                                : Colors.grey.shade300,
+                        foregroundColor:
+                            controller.transactionType.value == 'OUT'
+                                ? Colors.white
+                                : Colors.black54,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: () => controller.transactionType.value = 'OUT',
-                      child: const Text('Stock Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Stock Out',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -172,13 +179,38 @@ class ScanView extends GetView<ScanController> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Form Input: Harga
+              TextField(
+                controller: controller
+                    .priceController, // 🟢 Gunakan controller khusus harga
+                keyboardType: TextInputType
+                    .number, // 🟢 Otomatis memunculkan keyboard angka
+                decoration: InputDecoration(
+                  labelText: 'Harga',
+                  prefixText: 'Rp ', // 🟢 Menambahkan tulisan Rp di dalam kotak
+                  prefixStyle: const TextStyle(
+                      color: Colors.black87, fontWeight: FontWeight.bold),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Pengatur Qty
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Quantity:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text('Quantity:',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 16),
                   Container(
                     decoration: BoxDecoration(
@@ -195,7 +227,8 @@ class ScanView extends GetView<ScanController> {
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: Text(
                             '${controller.quantity.value}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
                         IconButton(
@@ -236,7 +269,8 @@ class ScanView extends GetView<ScanController> {
                       )
                     : const Text(
                         'Submit',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
               ),
               const SizedBox(height: 20),

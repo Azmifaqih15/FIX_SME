@@ -8,6 +8,7 @@ class Product {
   final int id;
   final String name;
   final String category;
+  final int price;
   final int qty;
   final String status;
   final String image;
@@ -16,6 +17,7 @@ class Product {
     required this.id,
     required this.name,
     required this.category,
+    required this.price,
     required this.qty,
     required this.status,
     required this.image,
@@ -26,6 +28,7 @@ class Product {
       id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '',
       category: json['category'] as String? ?? '',
+      price: json['price'] as int? ?? 0,
       qty: json['qty'] as int? ?? 0,
       status: json['status'] as String? ?? '',
       image: json['image'] as String? ??
@@ -151,6 +154,7 @@ class InventoryController extends GetxController {
     int id, {
     required String name,
     required String category,
+    required int price,
     required int qty,
     required String status,
     String? imagePath, // Diubah agar konsisten
@@ -165,6 +169,7 @@ class InventoryController extends GetxController {
         body: json.encode({
           "name": name,
           "category": category,
+          "price": price,
           "qty": qty,
           "status": status,
           // PERBAIKAN: Menggunakan variabel imagePath

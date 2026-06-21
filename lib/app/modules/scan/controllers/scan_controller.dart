@@ -31,6 +31,7 @@ class ScanController extends GetxController {
   final skuController = TextEditingController();
   final descriptionController = TextEditingController();
   final colorController = TextEditingController();
+  final priceController = TextEditingController();
 
   void incrementQty() {
     quantity.value++;
@@ -50,7 +51,7 @@ class ScanController extends GetxController {
       if (barcode.rawValue != null) {
         isScanning.value = true;
         skuController.text = barcode.rawValue!;
-        
+
         Get.snackbar('Berhasil', 'Barcode terdeteksi: ${barcode.rawValue}',
             backgroundColor: Colors.green, colorText: Colors.white);
 
@@ -71,20 +72,23 @@ class ScanController extends GetxController {
     skuController.clear();
     descriptionController.clear();
     colorController.clear();
+    priceController.clear();
   }
 
   Future<void> submitTransaction() async {
     if (skuController.text.isEmpty ||
         descriptionController.text.isEmpty ||
         colorController.text.isEmpty) {
-      Get.snackbar('Peringatan', 'Harap isi semua field (SKU, Deskripsi, Warna)',
+      Get.snackbar(
+          'Peringatan', 'Harap isi semua field (SKU, Deskripsi, Warna)',
           backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading(true);
-      final url = Uri.parse('https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/transaction/scan');
+      final url = Uri.parse(
+          'https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/transaction/scan');
       final response = await http.post(
         url,
         headers: {
@@ -129,6 +133,7 @@ class ScanController extends GetxController {
     descriptionController.dispose();
     colorController.dispose();
     mobileScannerController.dispose();
+    priceController.dispose();
     super.onClose();
   }
 }

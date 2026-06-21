@@ -354,6 +354,7 @@ class InventoryView extends GetView<InventoryController> {
     final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController();
     final qtyCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
 
     String selectedCategory = controller.categories[1];
     String selectedStatus = 'NORMAL';
@@ -515,6 +516,7 @@ class InventoryView extends GetView<InventoryController> {
     final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController(text: product.name);
     final qtyCtrl = TextEditingController(text: product.qty.toString());
+    final priceCtrl = TextEditingController(text: product.price.toString());
     final imageCtrl = TextEditingController(text: product.image);
 
     String selectedCategory = product.category.replaceAll('_', ' ');
@@ -543,6 +545,76 @@ class InventoryView extends GetView<InventoryController> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // --- 1. AREA UBAH GAMBAR ---
+                      GestureDetector(
+                        onTap: () => controller.pickImage(),
+                        child: Obx(() {
+                          final imagePath = controller.selectedImagePath.value;
+                          return Container(
+                            height: 120,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                style: imagePath.isEmpty
+                                    ? BorderStyle.solid
+                                    : BorderStyle.none,
+                              ),
+                            ),
+                            child: imagePath.isNotEmpty
+                                // Jika ada gambar baru yang dipilih dari galeri
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.file(
+                                      File(imagePath),
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                    ),
+                                  )
+                                // Jika belum pilih gambar baru, tampilkan gambar lama (atau placeholder)
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        // Tampilkan gambar asli produk (pastikan variabel product.image tersedia)
+                                        Image.network(
+                                          product.image,
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const Icon(
+                                                      Icons.image_not_supported,
+                                                      color: Colors.grey),
+                                        ),
+                                        // Lapisan gelap agar teks terlihat
+                                        Container(
+                                            color:
+                                                Colors.black.withOpacity(0.4)),
+                                        const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.edit_rounded,
+                                                size: 30, color: Colors.white),
+                                            SizedBox(height: 4),
+                                            Text("Tap to change image",
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12)),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+
                       TextFormField(
                         controller: nameCtrl,
                         decoration: const InputDecoration(labelText: 'Name'),
@@ -551,6 +623,7 @@ class InventoryView extends GetView<InventoryController> {
                             : null,
                       ),
                       const SizedBox(height: 10),
+
                       DropdownButtonFormField<String>(
                         value: selectedCategory,
                         items: controller.categories
@@ -564,6 +637,26 @@ class InventoryView extends GetView<InventoryController> {
                             const InputDecoration(labelText: 'Category'),
                       ),
                       const SizedBox(height: 10),
+
+                      // --- 2. INPUT HARGA ---
+                      TextFormField(
+                        controller:
+                            priceCtrl, // Pastikan Anda mendeklarasikan variabel ini di atas
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Harga',
+                          prefixText: 'Rp ', // Menambahkan prefix Rp
+                        ),
+                        validator: (v) {
+                          final s = v?.trim() ?? '';
+                          if (s.isEmpty) return 'Harga is required';
+                          if (int.tryParse(s) == null)
+                            return 'Harga must be a number';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
                       TextFormField(
                         controller: qtyCtrl,
                         keyboardType: TextInputType.number,
@@ -577,39 +670,37 @@ class InventoryView extends GetView<InventoryController> {
                         },
                       ),
                       const SizedBox(height: 10),
+
                       DropdownButtonFormField<String>(
                         value: selectedStatus,
                         items: ['NORMAL', 'WARNING', 'CRITICAL', 'DEAD STOCK']
-                            .map(
-                              (e) => DropdownMenuItem(
+                            .map((e) => DropdownMenuItem(
                                 value: e,
-                                child: Text(controller.statusLabel(e)),
-                              ),
-                            )
+                                child: Text(controller.statusLabel(e))))
                             .toList(),
                         onChanged: (v) => setState(
                             () => selectedStatus = v ?? selectedStatus),
                         decoration: const InputDecoration(labelText: 'Status'),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        controller: imageCtrl,
-                        decoration: const InputDecoration(
-                            labelText: 'Image URL (optional)'),
-                      ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 24),
+
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
                             if (!formKey.currentState!.validate()) return;
+
+                            // Menjalankan fungsi update di controller
                             controller.updateProduct(
                               product.id,
                               name: nameCtrl.text.trim(),
                               category: selectedCategory.toUpperCase(),
+                              price: int.tryParse(priceCtrl.text.trim()) ??
+                                  0, // Mengirimkan data harga
                               qty: int.parse(qtyCtrl.text.trim()),
                               status: selectedStatus,
-                              imagePath: imageCtrl.text.trim(),
+                              imagePath: controller.selectedImagePath
+                                  .value, // Mengirimkan gambar lokal baru jika ada
                             );
                             Get.back();
                           },
@@ -632,8 +723,7 @@ class InventoryView extends GetView<InventoryController> {
           },
         ),
       ),
-      isScrollControlled:
-          true, // Needed for SingleChildScrollView in bottomSheet
+      isScrollControlled: true,
     );
   }
 
