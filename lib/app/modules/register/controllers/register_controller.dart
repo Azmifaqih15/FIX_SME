@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -7,7 +9,7 @@ import 'package:smart_sme_app/app/data/services/auth_service.dart';
 
 class RegisterController extends GetxController {
   final box = GetStorage();
-  late AuthService authService; 
+  late AuthService authService;
 
   final nameController = TextEditingController();
   final emailController = TextEditingController();
@@ -23,6 +25,9 @@ class RegisterController extends GetxController {
 
   // Checkbox Terms
   var isAgree = false.obs;
+
+  // 🟢 State untuk Foto (BARU)
+  var selectedImagePath = ''.obs;
 
   @override
   void onInit() {
@@ -44,10 +49,21 @@ class RegisterController extends GetxController {
     isAgree.value = value ?? false;
   }
 
+  // 🟢 Fungsi untuk membuka galeri dan memilih foto (BARU)
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      selectedImagePath.value = image.path;
+    }
+  }
+
   void requestOTP() async {
     final email = emailController.text.trim();
     if (email.isEmpty) {
-      Get.snackbar("Error", "Email harus diisi untuk mengirim OTP", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar("Error", "Email harus diisi untuk mengirim OTP",
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
       return;
     }
 
@@ -55,7 +71,8 @@ class RegisterController extends GetxController {
     try {
       final response = await authService.sendOtpRequest(email);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Sukses", "Kode OTP telah dikirim ke email Anda", backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar("Sukses", "Kode OTP telah dikirim ke email Anda",
+            backgroundColor: Colors.green, colorText: Colors.white);
       } else {
         var data = response.body;
         String errorMsg = "Gagal mengirim OTP";
@@ -64,27 +81,31 @@ class RegisterController extends GetxController {
         } else if (data is Map && data['message'] != null) {
           errorMsg = data['message'].toString();
         }
-        Get.snackbar("Gagal", errorMsg, backgroundColor: Colors.redAccent, colorText: Colors.white);
+        Get.snackbar("Gagal", errorMsg,
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar("Error", "Gagal menghubungi server: $e", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", "Gagal menghubungi server: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isSendingOtp.value = false;
     }
   }
 
   void registerUser() async {
-    final name = nameController.text.trim(); 
+    final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      Get.snackbar("Error", "Semua field harus diisi", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar("Error", "Semua field harus diisi",
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
       return;
     }
 
     if (!isAgree.value) {
-      Get.snackbar("Error", "Anda harus menyetujui Terms of Service", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar("Error", "Anda harus menyetujui Terms of Service",
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
       return;
     }
 
@@ -94,35 +115,43 @@ class RegisterController extends GetxController {
       final response = await authService.sendOtpRequest(email);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Sukses", "Kode OTP telah dikirim ke email Anda", backgroundColor: Colors.green, colorText: Colors.white);
-        
+        Get.snackbar("Sukses", "Kode OTP telah dikirim ke email Anda",
+            backgroundColor: Colors.green, colorText: Colors.white);
+
         // 2. Pindah ke halaman OTP dengan membawa data yang sudah diisi
         Get.toNamed('/otp', arguments: {
           'name': name,
           'email': email,
           'password': password,
+          'imagePath': selectedImagePath
+              .value, // 🟢 Menitipkan path foto ke argumen (BARU)
           'is_registration': true
         });
       } else {
         print("DEBUG FRONTEND OTP ERROR: ${response.body}");
         var data = response.body;
         String errorMsg = "Gagal mengirim OTP";
-        
+
         if (data != null) {
           try {
             if (data is String) data = jsonDecode(data);
           } catch (_) {}
-          
+
           if (data is Map) {
-            errorMsg = data['detail']?.toString() ?? data['message']?.toString() ?? errorMsg;
+            errorMsg = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                errorMsg;
           }
         }
-        
-        Get.snackbar("Gagal", errorMsg, backgroundColor: Colors.redAccent, colorText: Colors.white);
+
+        Get.snackbar("Gagal", errorMsg,
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
       }
     } catch (e) {
       print("ERROR CRASH: $e");
-      Get.snackbar("Error Jaringan", "Tidak dapat terhubung ke server backend: $e", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+          "Error Jaringan", "Tidak dapat terhubung ke server backend: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

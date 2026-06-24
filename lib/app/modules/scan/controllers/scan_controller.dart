@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../inventory/controllers/inventory_controller.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ScanController extends GetxController {
   // Reactive Variables
@@ -12,6 +13,7 @@ class ScanController extends GetxController {
   var selectedSize = 'M'.obs;
   var quantity = 1.obs;
   var isLoading = false.obs;
+  var selectedImagePath = ''.obs;
 
   // Scanner State (for debouncing/flagging)
   var isScanning = false.obs;
@@ -124,6 +126,15 @@ class ScanController extends GetxController {
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading(false);
+    }
+  }
+
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      selectedImagePath.value = image.path;
     }
   }
 

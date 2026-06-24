@@ -25,15 +25,16 @@ class OtpVerificationView extends GetView<OtpVerificationController> {
             ),
             const SizedBox(height: 10),
             Obx(() => Text(
-              "Kode OTP telah dikirimkan ke email:\n${controller.email.value}",
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            )),
+                  "Kode OTP telah dikirimkan ke email:\n${controller.email.value}",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                )),
             const SizedBox(height: 30),
             TextField(
               controller: controller.otpController,
               keyboardType: TextInputType.number,
-              maxLength: 4,
+              maxLength:
+                  4, // Pastikan ini sesuai dengan backend Anda (biasanya 4 atau 6)
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 24, letterSpacing: 10),
               decoration: const InputDecoration(
@@ -44,18 +45,26 @@ class OtpVerificationView extends GetView<OtpVerificationController> {
             ),
             const SizedBox(height: 30),
             Obx(() => ElevatedButton(
-              onPressed: controller.isLoading.value ? null : controller.verifyAndRegister,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-              ),
-              child: controller.isLoading.value
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text("Verifikasi & Daftar", style: TextStyle(fontSize: 18)),
-            )),
+                  // 🟢 Panggil fungsi utama yang menangani logika cabang
+                  onPressed:
+                      controller.isLoading.value ? null : controller.submitOtp,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  child: controller.isLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
+                        )
+                      // 🟢 Teks tombol berubah secara dinamis
+                      : Text(
+                          controller.isForgotPassword.value
+                              ? "Verifikasi & Lanjut"
+                              : "Verifikasi & Daftar",
+                          style: const TextStyle(fontSize: 18)),
+                )),
           ],
         ),
       ),

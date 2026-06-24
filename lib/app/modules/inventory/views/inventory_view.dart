@@ -36,7 +36,7 @@ class InventoryView extends GetView<InventoryController> {
               }),
         ],
       ),
-      floatingActionButton: _buildFab(context),
+      // --- BARIS INI TELAH DIHAPUS (floatingActionButton: _buildFab(context),) ---
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -119,20 +119,12 @@ class InventoryView extends GetView<InventoryController> {
     );
   }
 
-  Widget _buildFab(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => _openCreateSheet(),
-      backgroundColor: Colors.black,
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: const Icon(Icons.add, color: Colors.white, size: 22),
-    );
-  }
+  // --- FUNGSI _buildFab JUGA TELAH DIHAPUS KARENA TIDAK TERPAKAI LAGI ---
 
   Widget _buildBottomNav() {
     return Container(
       height: 80,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(

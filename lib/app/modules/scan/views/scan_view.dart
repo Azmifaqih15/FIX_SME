@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../controllers/scan_controller.dart';
+import 'dart:io';
 
 class ScanView extends GetView<ScanController> {
   const ScanView({Key? key}) : super(key: key);
@@ -180,16 +181,13 @@ class ScanView extends GetView<ScanController> {
                 ),
               ),
               const SizedBox(height: 16),
-
               // Form Input: Harga
               TextField(
-                controller: controller
-                    .priceController, // 🟢 Gunakan controller khusus harga
-                keyboardType: TextInputType
-                    .number, // 🟢 Otomatis memunculkan keyboard angka
+                controller: controller.priceController,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Harga',
-                  prefixText: 'Rp ', // 🟢 Menambahkan tulisan Rp di dalam kotak
+                  prefixText: 'Rp ',
                   prefixStyle: const TextStyle(
                       color: Colors.black87, fontWeight: FontWeight.bold),
                   border: OutlineInputBorder(
@@ -201,6 +199,57 @@ class ScanView extends GetView<ScanController> {
                         const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
                   ),
                 ),
+              ),
+              const SizedBox(height: 16), // Jarak ke kotak foto
+
+              // 🟢 --- KODE BARU: AREA UPLOAD GAMBAR ---
+              const Text(
+                "Foto Produk",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => controller.pickImage(),
+                child: Obx(() {
+                  final imagePath = controller.selectedImagePath.value;
+                  return Container(
+                    height: 100, // Tinggi area foto produk
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        style: imagePath.isEmpty
+                            ? BorderStyle.solid
+                            : BorderStyle.none,
+                      ),
+                    ),
+                    child: imagePath.isEmpty
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_photo_alternate_outlined,
+                                  size: 40, color: Colors.grey[400]),
+                              const SizedBox(height: 8),
+                              Text("Tap to upload product image",
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12)),
+                            ],
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(imagePath),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          ),
+                  );
+                }),
               ),
               const SizedBox(height: 24),
 

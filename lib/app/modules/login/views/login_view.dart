@@ -67,7 +67,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Get.snackbar("Info", "Fitur lupa password belum diimplementasikan");
+                      Get.toNamed('/forgot-password');
                     },
                     child: const Text(
                       "Forgot password?",
@@ -77,57 +77,58 @@ class LoginView extends GetView<LoginController> {
                 ],
               ),
               Obx(() => TextField(
-                onChanged: (value) => controller.password.value = value,
-                obscureText: !controller.isPasswordVisible.value,
-                decoration: InputDecoration(
-                  hintText: "Masukan password anda",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      controller.isPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                    onChanged: (value) => controller.password.value = value,
+                    obscureText: !controller.isPasswordVisible.value,
+                    decoration: InputDecoration(
+                      hintText: "Masukan password anda",
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      filled: true,
+                      fillColor: const Color(0xFFF9FAFB),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.isPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () => controller.togglePasswordVisibility(),
+                      ),
                     ),
-                    onPressed: () => controller.togglePasswordVisibility(),
-                  ),
-                ),
-              )),
+                  )),
               const SizedBox(height: 32),
 
               // --- TOMBOL LOGIN UTAMA ---
               Obx(() => SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF111E38),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : () => controller.loginWithCredentials(),
-                  child: controller.isLoading.value
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          "Login",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF111E38),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                ),
-              )),
+                      ),
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () => controller.loginWithCredentials(),
+                      child: controller.isLoading.value
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Login",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  )),
               const SizedBox(height: 24),
 
+              // --- PEMBATAL / DIVIDER ---
               // --- PEMBATAL / DIVIDER ---
               const Center(
                 child: Text(
@@ -141,58 +142,69 @@ class LoginView extends GetView<LoginController> {
               ),
               const SizedBox(height: 16),
 
-              // --- TOMBOL FACE ID BIOMETRIK (HIDE ON WINDOWS) ---
-              if (!GetPlatform.isWindows) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF9FAFB),
-                      side: BorderSide.none,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              // --- TOMBOL FACE ID DAN GOOGLE (SEJAJAR) ---
+              Row(
+                children: [
+                  // TOMBOL FACE ID (HIDE ON WINDOWS)
+                  if (!GetPlatform.isWindows) ...[
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF9FAFB),
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => controller.loginWithFaceID(),
+                          icon: const Icon(Icons.face, color: Colors.black),
+                          label: const Text(
+                            "Face ID", // Teks dipersingkat agar muat
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: () => controller.loginWithFaceID(),
-                    icon: const Icon(Icons.face, color: Colors.black),
-                    label: const Text(
-                      "Face ID Login",
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+                    const SizedBox(width: 12), // Jarak pemisah antar tombol
+                  ],
 
-              // --- TOMBOL LOGIN GOOGLE ---
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  // TOMBOL LOGIN GOOGLE
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.shade300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => controller.loginWithGoogle(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/google.png',
+                              width: 24,
+                              height: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              // Mencegah eror garis kuning hitam jika layar terlalu kecil
+                              child: Text(
+                                "Google", // Teks dipersingkat agar muat
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  onPressed: () => controller.loginWithGoogle(),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/google.png',
-                        width: 24,
-                        height: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Login dengan Google",
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
               const SizedBox(height: 32),
 
