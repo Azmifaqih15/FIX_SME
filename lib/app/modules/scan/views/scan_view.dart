@@ -135,7 +135,6 @@ class ScanView extends GetView<ScanController> {
               const SizedBox(height: 16),
 
 
-
               // Form Input: Kategori Dropdown
               DropdownButtonFormField<String>(
                 value: controller.selectedCategory.value,

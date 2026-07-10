@@ -95,4 +95,3 @@ class ActivityLogView extends GetView<ActivityLogController> {
     );
   }
 }
-

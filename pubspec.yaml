@@ -30,11 +30,14 @@ dependencies:
   flutter_barcode_scanner: ^2.0.0
   mobile_scanner: ^7.2.0
   image_picker: ^1.2.2
+<<<<<<< HEAD
   shared_preferences: ^2.5.5
   fl_chart: ^1.2.0
   camera: ^0.12.0+1
   flutter_local_notifications: ^20.1.0
   permission_handler: ^12.0.3
+=======
+>>>>>>> 01a30d69950ce651f383fe56b426d347b8403f45
 
 dev_dependencies:
   flutter_test:

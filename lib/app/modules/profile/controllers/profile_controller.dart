@@ -19,7 +19,6 @@ class ProfileController extends GetxController {
 
   var name = "John Doe".obs;
   var email = "john@business.com".obs;
-
   var profileImagePath = ''.obs;
   var editingProfileImagePath = ''.obs;
 

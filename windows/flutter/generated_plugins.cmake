@@ -5,11 +5,18 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   local_auth_windows
+<<<<<<< HEAD
   permission_handler_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_local_notifications_windows
+=======
+)
+
+list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
+>>>>>>> 01a30d69950ce651f383fe56b426d347b8403f45
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)
