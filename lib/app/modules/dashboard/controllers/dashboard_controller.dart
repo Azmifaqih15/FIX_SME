@@ -322,7 +322,7 @@ class DashboardController extends GetxController {
   Future<void> fetchDashboardSummary() async {
     try {
       final url = Uri.parse(
-          'https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/dashboard/summary');
+          'https://backend-sme.up.railway.app/api/v1/dashboard/summary');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -351,7 +351,7 @@ class DashboardController extends GetxController {
       // Use standard localhost URL for flutter run or adjust as per environment
       // Assuming ngrok domain was used, we will use the same domain for consistency or standard loopback if needed.
       // I will use the same ngrok base URL used in fetchDashboardSummary.
-      final url = Uri.parse('https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/dashboard/stats');
+      final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/dashboard/stats');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

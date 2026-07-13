@@ -17,7 +17,7 @@ class NotificationController extends GetxController {
   // Fungsi untuk menandai satu notifikasi sebagai dibaca
   Future<void> markAsRead(int notificationId) async {
     try {
-      final url = Uri.parse('https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/notifications/$notificationId/read');
+      final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/notifications/$notificationId/read');
       final response = await http.put(
         url,
         headers: {'ngrok-skip-browser-warning': 'true'},
@@ -49,7 +49,7 @@ class NotificationController extends GetxController {
     try {
       isLoading.value = true;
       // Gunakan URL yang sama dengan konfigurasi environment Anda
-      final url = Uri.parse('https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/notifications');
+      final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/notifications');
       final response = await http.get(
         url,
         headers: {'ngrok-skip-browser-warning': 'true'},

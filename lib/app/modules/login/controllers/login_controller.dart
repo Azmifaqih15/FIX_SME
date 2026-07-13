@@ -164,7 +164,7 @@ class LoginController extends GetxController {
       }
       
       print('3. Token berhasil didapat (length: ${idToken.length}). Mengirim ke Backend...');
-      print('URL Target: https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/auth/google-login');
+      print('URL Target: https://backend-sme.up.railway.app/api/v1/auth/google-login');
       
       // Kirim data Google ke FastAPI backend
       final response = await authService.googleLoginBackend(emailAddress, idToken, displayName);

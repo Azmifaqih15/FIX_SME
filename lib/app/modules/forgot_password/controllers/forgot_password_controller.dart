@@ -52,18 +52,18 @@ class ForgotPasswordController extends GetxController {
             colorText: Colors.white,
           );
         }
-      } on SocketException catch (_) {
+      } on SocketException catch (e) {
         Get.snackbar(
-          "Error",
-          "Gagal terhubung ke server. Pastikan aplikasi dan server berada di jaringan yang sama.",
+          "Socket Exception",
+          "Gagal terhubung ke server: $e",
           backgroundColor: Colors.red,
           colorText: Colors.white,
           duration: const Duration(seconds: 4),
         );
-      } on TimeoutException catch (_) {
+      } on TimeoutException catch (e) {
         Get.snackbar(
-          "Error",
-          "Gagal terhubung ke server. Pastikan aplikasi dan server berada di jaringan yang sama.",
+          "Timeout Exception",
+          "Koneksi terlalu lama (Timeout): $e",
           backgroundColor: Colors.red,
           colorText: Colors.white,
           duration: const Duration(seconds: 4),

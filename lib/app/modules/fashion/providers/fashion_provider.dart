@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 class FashionProvider extends GetConnect {
   @override
   void onInit() {
-    httpClient.baseUrl = 'https://braden-noncrusading-uncarnivorously.ngrok-free.dev/api/v1/';
+    httpClient.baseUrl = 'https://backend-sme.up.railway.app/api/v1/';
     httpClient.timeout = const Duration(seconds: 10);
     
     // Tambahkan Header Default ini untuk me-bypass peringatan Ngrok
