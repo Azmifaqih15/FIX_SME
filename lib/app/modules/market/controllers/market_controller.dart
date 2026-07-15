@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
-import '../providers/market_provider.dart';
+import 'package:smart_sme_app/app/data/services/price_service.dart';
 
 class PriceMonitorModel {
   final String kategori;
@@ -21,18 +21,18 @@ class PriceMonitorModel {
 
   factory PriceMonitorModel.fromJson(Map<String, dynamic> json) {
     return PriceMonitorModel(
-      kategori: json['kategori'] ?? 'Unknown',
+      kategori: json['kategori'] ?? '-',
       hppInternal: (json['hpp_internal'] ?? 0).toInt(),
       hargaJualSaatIni: (json['harga_jual_saat_ini'] ?? 0).toInt(),
       rekomendasiHargaJual: (json['rekomendasi_harga_jual'] ?? 0).toDouble(),
       rataRataPasar: (json['rata_rata_pasar'] ?? 0).toDouble(),
-      statusPersaingan: json['status_persaingan'] ?? 'Unknown',
+      statusPersaingan: json['status'] ?? json['status_persaingan'] ?? '-',
     );
   }
 }
 
 class MarketController extends GetxController {
-  late final MarketProvider _provider;
+  late final PriceService _priceService;
 
   var monitoringList = <PriceMonitorModel>[].obs;
   var isLoading = false.obs;
@@ -41,7 +41,7 @@ class MarketController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _provider = Get.put(MarketProvider());
+    _priceService = PriceService();
     fetchMarketData();
   }
 
@@ -50,30 +50,24 @@ class MarketController extends GetxController {
       isLoading(true);
       errorMessage('');
       
-      final response = await _provider.getMarketAnalysis();
+      final rawData = await _priceService.getPriceRecommendation();
       
-      if (response.statusCode == 200 && response.body != null) {
-        print('Raw Response API: ${response.body}');
-        var rawData = response.body['data'] ?? [];
-        if (rawData is List) {
-          var parsedList = <PriceMonitorModel>[];
-          for (var item in rawData) {
-            try {
-              parsedList.add(PriceMonitorModel.fromJson(item));
-            } catch (e) {
-              print('Error parsing item: $e');
-            }
-          }
-          monitoringList.assignAll(parsedList);
-          print('Data berhasil diparsing: ${monitoringList.length}');
+      var parsedList = <PriceMonitorModel>[];
+      for (var item in rawData) {
+        try {
+          parsedList.add(PriceMonitorModel.fromJson(item));
+        } catch (e) {
+          print('Error parsing item: $e');
         }
-      } else {
-        errorMessage('Gagal memuat data: ${response.statusCode}');
-        Get.snackbar("Error", errorMessage.value);
       }
+      
+      monitoringList.assignAll(parsedList);
+      print('Data berhasil diparsing: ${monitoringList.length}');
+      
     } catch (e) {
-      errorMessage('Terjadi kesalahan koneksi');
-      Get.snackbar("Koneksi Error", "Mohon periksa jaringan internet Anda.");
+      print('Error Market Data: $e');
+      errorMessage('Terjadi kesalahan koneksi atau data belum tersedia.');
+      Get.snackbar("Koneksi Error", "Mohon periksa jaringan internet Anda atau pastikan data ada.");
     } finally {
       isLoading(false);
     }

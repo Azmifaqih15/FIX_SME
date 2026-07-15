@@ -274,12 +274,17 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Harga pasar yang disarankan: Rp ${data['rekomendasi_harga'] ?? 0}",
+                    "Harga pasar yang disarankan: Rp ${data['rekomendasi_harga'] ?? data['rekomendasi_harga_jual'] ?? 0}",
                     style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Status: ${data['status'] ?? '-'}",
+                    "Harga Anda (Yours): Rp ${data['harga_anda'] ?? data['your_price'] ?? 0}",
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Status: ${data['status'] ?? data['status_persaingan'] ?? '-'}",
                     style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                   ),
                 ],
@@ -292,14 +297,7 @@ class DashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildStockChart() {
-    // Definisi warna per kategori agar konsisten
-    final Map<String, Color> categoryColors = {
-      'Oversize': const Color(0xFF10B981),
-      'Boxy Fit': const Color(0xFFF59E0B),
-      'Fitted': const Color(0xFFDC2626),
-      'Regular Fit': const Color(0xFF6B7280),
-      'Lainnya': Colors.purple,
-    };
+    // UI logic start
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -319,12 +317,12 @@ class DashboardView extends GetView<DashboardController> {
           SizedBox(
             height: 200,
             child: Obx(() {
-              if (controller.dynamicGrandTotal == 0) {
-                return PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 40,
-                    sections: controller.dynamicPieChartSections,
+              if (controller.totalStock.value == 0) {
+                return const Center(
+                  child: Text(
+                    "Belum ada data stok. Silakan Scan In produk.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 );
               }
@@ -333,7 +331,7 @@ class DashboardView extends GetView<DashboardController> {
                 PieChartData(
                   sectionsSpace: 2,
                   centerSpaceRadius: 40,
-                  sections: controller.dynamicPieChartSections,
+                  sections: controller.chartSections,
                 ),
                 swapAnimationDuration: const Duration(milliseconds: 800),
                 swapAnimationCurve: Curves.easeInOut,
@@ -342,27 +340,30 @@ class DashboardView extends GetView<DashboardController> {
           ),
           const SizedBox(height: 20),
           Obx(() {
-            if (controller.dynamicGrandTotal == 0) return const SizedBox();
+            if (controller.totalStock.value == 0) return const SizedBox();
             
-            // Generate Legend secara dinamis berdasarkan kategori yang ada
+            // Palette warna yang sama persis dengan yang ada di Controller
+            final List<Color> palette = [
+              const Color(0xFF10B981), // Emerald
+              const Color(0xFFF59E0B), // Amber
+              const Color(0xFFDC2626), // Red
+              const Color(0xFF6B7280), // Gray
+              const Color(0xFF4F46E5), // Indigo
+              const Color(0xFF0EA5E9), // Sky Blue
+              const Color(0xFF8B5CF6), // Violet
+              Colors.pink,
+              Colors.teal,
+            ];
+            
             List<Widget> legends = [];
-            final Map<String, Color> categoryColors = {
-              'Oversize': const Color(0xFF10B981),
-              'Boxy Fit': const Color(0xFFF59E0B),
-              'Fitted': const Color(0xFFDC2626),
-              'Regular Fit': const Color(0xFF6B7280),
-              'Lainnya': Colors.purple,
-            };
+            int colorIndex = 0;
             
-            Map<String, int> tempTotals = {};
-            for (var item in controller.inventoryController.productList) {
-               tempTotals[item.category] = (tempTotals[item.category] ?? 0) + item.qty;
-            }
-            
-            tempTotals.forEach((category, stock) {
+            // Generate Legend secara dinamis berdasarkan data stockByCategory
+            controller.stockByCategory.forEach((category, stock) {
                if (stock > 0) {
-                 Color color = categoryColors[category] ?? Colors.grey;
+                 Color color = palette[colorIndex % palette.length];
                  legends.add(_buildLegend(color, category));
+                 colorIndex++;
                }
             });
             
@@ -486,7 +487,7 @@ class DashboardView extends GetView<DashboardController> {
                         child: BarChart(
                           BarChartData(
                             alignment: BarChartAlignment.spaceAround,
-                            maxY: 30, // Max Y ini nantinya bisa dibuat dinamis sesuai data
+                            maxY: controller.monthlyProfits.reduce((curr, next) => curr > next ? curr : next) * 1.2, // Tambahkan 20% margin atas
                             titlesData: FlTitlesData(
                               show: true,
                               rightTitles: const AxisTitles(
@@ -498,17 +499,9 @@ class DashboardView extends GetView<DashboardController> {
                                   showTitles: true,
                                   getTitlesWidget: (value, meta) {
                                     const style = TextStyle(color: Colors.grey, fontSize: 10);
-                                    var displayMonths = controller.monthLabels.isEmpty ? months : controller.monthLabels;
-                                    
-                                    if (controller.selectedMonth.value == 'All') {
-                                      if (value.toInt() >= 0 && value.toInt() < displayMonths.length) {
-                                        return Text(displayMonths[value.toInt()], style: style);
-                                      }
-                                    } else {
-                                      // Hanya satu batang yang tampil, label mengikuti bulan yang dipilih
-                                      if (value.toInt() == 0) {
-                                        return Text(controller.selectedMonth.value, style: style);
-                                      }
+                                    int monthIndex = value.toInt();
+                                    if (monthIndex >= 0 && monthIndex < months.length) {
+                                      return Text(months[monthIndex], style: style);
                                     }
                                     return const Text('');
                                   },
@@ -517,10 +510,19 @@ class DashboardView extends GetView<DashboardController> {
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 30,
-                                  getTitlesWidget: (value, meta) => Text(
-                                      controller.formatProfit(value),
-                                      style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                                  reservedSize: 40,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value == 0) return const Text('');
+                                    String formatted = '';
+                                    if (value >= 1000000) {
+                                      formatted = '${(value / 1000000).toStringAsFixed(1).replaceAll('.0', '')}M';
+                                    } else if (value >= 1000) {
+                                      formatted = '${(value / 1000).toStringAsFixed(1).replaceAll('.0', '')}k';
+                                    } else {
+                                      formatted = value.toInt().toString();
+                                    }
+                                    return Text(formatted, style: const TextStyle(color: Colors.grey, fontSize: 10));
+                                  },
                                 ),
                               ),
                             ),
@@ -542,22 +544,14 @@ class DashboardView extends GetView<DashboardController> {
                                 }
                               },
                             ),
-                            barGroups: controller.selectedMonth.value == 'All'
-                                ? List.generate(
-                                    controller.monthlyProfits.length,
-                                    (index) => _makeBarGroup(
-                                      index, 
-                                      controller.monthlyProfits[index], 
-                                      index == controller.selectedMonthIndex.value
-                                    ),
-                                  )
-                                : [
-                                    _makeBarGroup(
-                                      0, // Selalu di koordinat X=0 untuk single bar
-                                      controller.monthlyProfits[months.indexOf(controller.selectedMonth.value)],
-                                      months.indexOf(controller.selectedMonth.value) == controller.selectedMonthIndex.value
-                                    )
-                                  ],
+                            barGroups: List.generate(
+                              controller.monthlyProfits.length,
+                              (index) => _makeBarGroup(
+                                index, 
+                                controller.monthlyProfits[index], 
+                                (index + 1) == controller.selectedMonthNum.value // index + 1 = angka bulan
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -577,29 +571,20 @@ class DashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildMonthFilter(List<String> months) {
-    List<String> filterOptions = ['All', ...months];
-    
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: filterOptions.map((option) {
-          bool isSelected = controller.selectedMonth.value == option;
+        children: List.generate(months.length, (index) {
+          int monthNum = index + 1; // 1 = Jan, 2 = Feb, dll
+          bool isSelected = controller.selectedMonthNum.value == monthNum;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
-              label: Text(option),
+              label: Text(months[index]),
               selected: isSelected,
               onSelected: (bool selected) {
                 if (selected) {
-                  controller.selectedMonth.value = option;
-                  controller.selectedMonthIndex.value = -1;
-                  
-                  if (option != 'All') {
-                    // Tampilkan detail via bottomSheet
-                    int monthIndex = months.indexOf(option);
-                    var detailData = controller.getDetailPerMonth(monthIndex);
-                    _showMonthDetailBottomSheet(detailData);
-                  }
+                  controller.setSalesMonthFilter(monthNum);
                 }
               },
               selectedColor: const Color(0xFF4F46E5),
@@ -617,7 +602,7 @@ class DashboardView extends GetView<DashboardController> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ),
     );
   }
@@ -758,10 +743,7 @@ class DashboardView extends GetView<DashboardController> {
 
         // 1. Ambil daftar tanggal/bulan yang unik untuk label sumbu X (Maksimal 6)
         // Ini akan mengambil string seperti "January 2026", "February 2026", dst.
-        List<String> listBulan = controller.priceTrendData
-            .map((item) => item['date'].toString())
-            .toSet()
-            .toList();
+        List<String> listBulan = controller.trendDates;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -851,7 +833,7 @@ class DashboardView extends GetView<DashboardController> {
                   // Mengatur batas dinamis sumbu Y agar grafik fleksibel mengikuti range harga scraping
                   minY: 100000,
                   maxY: 300000,
-                  lineBarsData: _getFilteredChartData(listBulan),
+                  lineBarsData: _getFilteredChartData(),
                 ),
               ),
             ),
@@ -895,55 +877,43 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
-  // Helper baru untuk mencocokkan harga berdasarkan urutan bulan dan kategori
-  List<FlSpot> _generateSpotsForCategory(
-      List<String> listBulan, String namaKategori) {
-    List<FlSpot> spots = [];
-    for (int i = 0; i < listBulan.length; i++) {
-      // Cari dokumen yang bulannya COCOK dan kategorinya COCOK
-      var match = controller.priceTrendData.firstWhere(
-        (item) =>
-            item['date'] == listBulan[i] && item['category'] == namaKategori,
-        orElse: () => {},
-      );
-
-      if (match.isNotEmpty) {
-        num harga = match['price'] ?? 0;
-        spots.add(FlSpot(i.toDouble(), harga.toDouble()));
-      }
-    }
-    return spots;
-  }
-
-  // Helper untuk membuat konfigurasi garis secara instan (agar kode tidak panjang)
   // Helper: Membuat data grafik dinamis berdasarkan kategori yang dipilih
-  List<LineChartBarData> _getFilteredChartData(List<String> listBulan) {
-    String selected = controller.selectedCategory.value;
+  List<LineChartBarData> _getFilteredChartData() {
+    String selected = controller.selectedCategoryFilter.value;
     List<LineChartBarData> allData = [];
+    var spotsByCat = controller.trendSpotsByCategory;
 
     if (selected == 'All' || selected == 'Boxy Fit') {
-      allData.add(_createLineData(
-        color: const Color(0xFF66C2A5),
-        spots: _generateSpotsForCategory(listBulan, "Boxy Fit"),
-      ));
+      if (spotsByCat['Boxy Fit']?.isNotEmpty ?? false) {
+        allData.add(_createLineData(
+          color: const Color(0xFF66C2A5),
+          spots: spotsByCat['Boxy Fit']!,
+        ));
+      }
     }
     if (selected == 'All' || selected == 'Fitted') {
-      allData.add(_createLineData(
-        color: const Color(0xFFFC8D62),
-        spots: _generateSpotsForCategory(listBulan, "Fitted"),
-      ));
+      if (spotsByCat['Fitted']?.isNotEmpty ?? false) {
+        allData.add(_createLineData(
+          color: const Color(0xFFFC8D62),
+          spots: spotsByCat['Fitted']!,
+        ));
+      }
     }
     if (selected == 'All' || selected == 'Oversize') {
-      allData.add(_createLineData(
-        color: const Color(0xFF8DA0CB),
-        spots: _generateSpotsForCategory(listBulan, "Oversize"),
-      ));
+      if (spotsByCat['Oversize']?.isNotEmpty ?? false) {
+        allData.add(_createLineData(
+          color: const Color(0xFF8DA0CB),
+          spots: spotsByCat['Oversize']!,
+        ));
+      }
     }
     if (selected == 'All' || selected == 'Regular Fit') {
-      allData.add(_createLineData(
-        color: const Color(0xFFE78AC3),
-        spots: _generateSpotsForCategory(listBulan, "Regular Fit"),
-      ));
+      if (spotsByCat['Regular Fit']?.isNotEmpty ?? false) {
+        allData.add(_createLineData(
+          color: const Color(0xFFE78AC3),
+          spots: spotsByCat['Regular Fit']!,
+        ));
+      }
     }
 
     return allData;
@@ -953,17 +923,17 @@ class DashboardView extends GetView<DashboardController> {
   Widget _buildCategoryFilter() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: Row(
+      child: Obx(() => Row(
         children: controller.categories.map((category) {
-          bool isSelected = controller.selectedCategory.value == category;
+          bool isSelected = controller.selectedCategoryFilter.value == category;
           return GestureDetector(
-            onTap: () => controller.changeCategory(category),
+            onTap: () => controller.setCategoryFilter(category),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
+                color: isSelected ? Colors.blueAccent : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected ? Colors.blueAccent : Colors.grey[300]!,
@@ -974,7 +944,7 @@ class DashboardView extends GetView<DashboardController> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isSelected) ...[
-                    const Icon(Icons.check, size: 16, color: Colors.blueAccent),
+                    const Icon(Icons.check, size: 16, color: Colors.white),
                     const SizedBox(width: 6),
                   ],
                   Text(
@@ -982,7 +952,7 @@ class DashboardView extends GetView<DashboardController> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? Colors.blueAccent : Colors.grey[600],
+                      color: isSelected ? Colors.white : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -990,7 +960,7 @@ class DashboardView extends GetView<DashboardController> {
             ),
           );
         }).toList(),
-      ),
+      )),
     );
   }
 
@@ -998,7 +968,7 @@ class DashboardView extends GetView<DashboardController> {
       {required Color color, required List<FlSpot> spots}) {
     return LineChartBarData(
       spots: spots,
-      isCurved: false, // 🟢 Garis Lurus (Tidak Melengkung)
+      isCurved: true, // 🟢 Garis Melengkung sesuai instruksi
       color: color,
       barWidth: 2,
       isStrokeCapRound: true,

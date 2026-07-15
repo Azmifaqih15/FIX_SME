@@ -5,3 +5,7 @@ passlib[bcrypt]==1.7.4
 pydantic[email]==2.6.4
 python-multipart==0.0.9
 motor==3.3.2
+supabase==2.3.4
+deepface==0.0.84
+tensorflow-cpu==2.16.1
+pymongo==4.7.0

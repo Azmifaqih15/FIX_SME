@@ -17,7 +17,7 @@ class PriceService {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          "Content-Type": "application/json",
+          ...ApiConfig.getHeaders(),
           "ngrok-skip-browser-warning": "true",
         },
       );
@@ -38,21 +38,20 @@ class PriceService {
   }
 
   /// 2. FUNGSI UNTUK MENGAMBIL DATA REKOMENDASI HARGA TERBARU
-  /// Mengembalikan satu Map data rekomendasi paling mutakhir
-  Future<Map<String, dynamic>> getPriceRecommendation() async {
+  /// Mengembalikan List Map data rekomendasi
+  Future<List<Map<String, dynamic>>> getPriceRecommendation() async {
     try {
       final response = await http.get(
         Uri.parse('${baseUrl}rekomendasi'),
         headers: {
-          "Content-Type": "application/json",
+          ...ApiConfig.getHeaders(),
           "ngrok-skip-browser-warning": "true",
         },
       );
 
       if (response.statusCode == 200) {
-        // Karena endpoint ini hanya mengembalikan 1 objek data terbaru (bukan list)
-        final Map<String, dynamic> decodedData = jsonDecode(response.body);
-        return decodedData;
+        final List<dynamic> decodedData = jsonDecode(response.body);
+        return decodedData.map((item) => item as Map<String, dynamic>).toList();
       } else {
         throw Exception(
             "Gagal memuat data rekomendasi. Kode Status: ${response.statusCode}");

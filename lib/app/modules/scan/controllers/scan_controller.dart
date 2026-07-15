@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../routes/app_pages.dart';
 import 'package:smart_sme_app/app/data/api_config.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
+import 'package:get_storage/get_storage.dart';
 
 class ScanController extends GetxController {
   // Reactive Variables
@@ -95,11 +97,7 @@ class ScanController extends GetxController {
       return;
     }
 
-    // Tampilkan loading dialog
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    isLoading.value = true;
 
     try {
       // Ganti sesuai host backend Anda
@@ -107,6 +105,11 @@ class ScanController extends GetxController {
       ApiConfig.logNetwork(fullUrl);
       final url = Uri.parse(fullUrl);
       var request = http.MultipartRequest('POST', url);
+      final box = GetStorage();
+      final String? token = box.read('access_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
       request.headers['ngrok-skip-browser-warning'] = 'true';
 
       // Persiapan Data Wajib
@@ -126,11 +129,13 @@ class ScanController extends GetxController {
       if (colorController.text.isNotEmpty) request.fields['color'] = colorController.text;
       
       if (transactionType.value == 'IN' && hargaBeliController.text.isNotEmpty) {
-        request.fields['price'] = hargaBeliController.text;
+        String cleanPrice = hargaBeliController.text.replaceAll(RegExp(r'[^0-9]'), '');
+        if (cleanPrice.isNotEmpty) request.fields['price'] = cleanPrice;
       }
       
       if (transactionType.value == 'OUT' && hargaJualController.text.isNotEmpty) {
-        request.fields['selling_price'] = hargaJualController.text;
+        String cleanSellingPrice = hargaJualController.text.replaceAll(RegExp(r'[^0-9]'), '');
+        if (cleanSellingPrice.isNotEmpty) request.fields['selling_price'] = cleanSellingPrice;
       }
 
       // Sisipkan foto jika ada HANYA saat Stock In
@@ -141,11 +146,8 @@ class ScanController extends GetxController {
       }
 
       // Eksekusi API
-      var streamedResponse = await request.send();
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 15));
       var response = await http.Response.fromStream(streamedResponse);
-
-      // Tutup loading dialog
-      Get.back();
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Berhasil
@@ -164,6 +166,11 @@ class ScanController extends GetxController {
         // Refresh Activity Log jika controller aktif
         if (Get.isRegistered<ActivityLogController>()) {
           Get.find<ActivityLogController>().fetchLogs();
+        }
+
+        // Refresh Dashboard Profit Chart (Performa Penjualan)
+        if (Get.isRegistered<DashboardController>()) {
+          Get.find<DashboardController>().fetchMonthlyProfit();
         }
 
         // Baru setelah itu bersihkan form input
@@ -185,9 +192,12 @@ class ScanController extends GetxController {
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.back(); // Pastikan loading tertutup saat crash
-      Get.snackbar('Error', 'Gagal menghubungi server: $e',
+      print(e);
+      Get.snackbar('Error Backend', e.toString(), 
+          duration: const Duration(seconds: 5),
           backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -200,11 +210,7 @@ class ScanController extends GetxController {
       return;
     }
 
-    // 1. Tampilkan indikator loading di awal
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    isLoading.value = true;
 
     try {
       // Ganti URL dengan endpoint backend yang sesuai untuk input barang
@@ -212,8 +218,12 @@ class ScanController extends GetxController {
       ApiConfig.logNetwork(fullUrl);
       final url = Uri.parse(fullUrl);
           
-      // 2. Gunakan MultipartRequest
       var request = http.MultipartRequest('POST', url);
+      final box = GetStorage();
+      final String? token = box.read('access_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
       request.headers['ngrok-skip-browser-warning'] = 'true';
 
       // 3. Isi request.fields persis sesuai kunci yang diminta
@@ -222,7 +232,8 @@ class ScanController extends GetxController {
       request.fields['category'] = selectedCategory.value;
       request.fields['size'] = selectedSize.value;
       request.fields['color'] = colorController.text;
-      request.fields['price'] = hargaBeliController.text.isEmpty ? '0' : hargaBeliController.text;
+      String cleanPrice = hargaBeliController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      request.fields['price'] = cleanPrice.isEmpty ? '0' : cleanPrice;
       request.fields['qty'] = quantity.value.toString();
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -239,11 +250,8 @@ class ScanController extends GetxController {
       }
 
       // 5. Kirim request
-      var streamedResponse = await request.send();
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 15));
       var response = await http.Response.fromStream(streamedResponse);
-
-      // Tutup loading
-      Get.back();
 
       // 6. Cek respon 200/201
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -272,9 +280,12 @@ class ScanController extends GetxController {
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.back(); // Pastikan dialog loading ditutup walau error
-      Get.snackbar('Error', 'Gagal menghubungi server: $e',
+      print(e);
+      Get.snackbar('Error Backend', e.toString(), 
+          duration: const Duration(seconds: 5),
           backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
     }
   }
 
