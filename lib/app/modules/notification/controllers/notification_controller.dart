@@ -15,28 +15,22 @@ class NotificationController extends GetxController {
     fetchNotifications(); // Auto fetch saat aplikasi dibuka
   }
 
-  // Fungsi untuk menandai satu notifikasi sebagai dibaca
-  Future<void> markAsRead(int notificationId) async {
+  // Fungsi untuk menandai satu notifikasi sebagai dibaca (simpan secara lokal)
+  Future<void> markAsRead(String notificationId) async {
     try {
-      final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/notifications/$notificationId/read');
-      final response = await http.put(
-        url,
-        headers: {
-          ...ApiConfig.getHeaders(),
-          'ngrok-skip-browser-warning': 'true',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        int index = notifications.indexWhere((n) => n['id'] == notificationId);
-        if (index != -1) {
-          // Update item agar UI ter-trigger reaktif
-          var updatedNotif = Map<String, dynamic>.from(notifications[index]);
-          updatedNotif['is_read'] = true;
-          notifications[index] = updatedNotif;
-        }
-      } else {
-        print("Gagal menandai dibaca: ${response.statusCode}");
+      final box = GetStorage();
+      List<dynamic> readList = box.read<List<dynamic>>('read_notifications') ?? [];
+      if (!readList.contains(notificationId)) {
+        readList.add(notificationId);
+        await box.write('read_notifications', readList);
+      }
+      
+      // Update item agar UI ter-trigger reaktif
+      int index = notifications.indexWhere((n) => n['id'].toString() == notificationId);
+      if (index != -1) {
+        var updatedNotif = Map<String, dynamic>.from(notifications[index]);
+        updatedNotif['is_read'] = true;
+        notifications[index] = updatedNotif;
       }
     } catch (e) {
       print("Error markAsRead: $e");
@@ -65,18 +59,33 @@ class NotificationController extends GetxController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data != null && data['notifications'] != null) {
-          notifications.value = data['notifications'];
+          final box = GetStorage();
+          List<dynamic> readList = box.read<List<dynamic>>('read_notifications') ?? [];
+          
+          List<dynamic> fetchedNotifs = data['notifications'];
+          List<dynamic> unreadForPopup = [];
+          
+          for (var i = 0; i < fetchedNotifs.length; i++) {
+            if (fetchedNotifs[i]['id'] != null && readList.contains(fetchedNotifs[i]['id'].toString())) {
+              fetchedNotifs[i]['is_read'] = true;
+            } else {
+              fetchedNotifs[i]['is_read'] = false;
+              unreadForPopup.add(fetchedNotifs[i]);
+            }
+          }
+          
+          notifications.value = fetchedNotifs;
 
           // --- LOGIKA POP-UP NOTIFIKASI ---
-          if (notifications.isNotEmpty) {
-            // Gunakan judul dari notifikasi pertama jika ada, atau teks default
-            String title = notifications[0]['title'] ?? 'Pemberitahuan Sistem';
+          if (unreadForPopup.isNotEmpty) {
+            // Gunakan judul dari notifikasi pertama yang belum dibaca
+            String title = unreadForPopup[0]['title'] ?? 'Pemberitahuan Sistem';
             
-            // Periksa jika snackbar sudah terbuka agar tidak menumpuk berkali-kali jika dipanggil manual berulang
+            // Periksa jika snackbar sudah terbuka agar tidak menumpuk
             if (!Get.isSnackbarOpen) {
               Get.snackbar(
                 title,
-                'Kamu memiliki ${notifications.length} notifikasi baru terkait stok dan penjualan!',
+                'Kamu memiliki ${unreadForPopup.length} notifikasi baru terkait stok dan penjualan!',
                 snackPosition: SnackPosition.TOP,
                 backgroundColor: Colors.blue.withOpacity(0.8),
                 colorText: Colors.white,
@@ -161,7 +170,7 @@ class NotificationController extends GetxController {
                     final message = notif['message'] ?? '';
                     final type = notif['type'] ?? 'info';
                     final isRead = notif['is_read'] == true;
-                    final notifId = notif['id'];
+                    final String? notifId = notif['id']?.toString();
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
