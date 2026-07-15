@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_sme_app/app/data/api_config.dart';
 
 class NotificationController extends GetxController {
   // Variabel reaktif untuk menyimpan array notifikasi dari backend
@@ -20,7 +21,10 @@ class NotificationController extends GetxController {
       final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/notifications/$notificationId/read');
       final response = await http.put(
         url,
-        headers: {'ngrok-skip-browser-warning': 'true'},
+        headers: {
+          ...ApiConfig.getHeaders(),
+          'ngrok-skip-browser-warning': 'true',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -52,7 +56,10 @@ class NotificationController extends GetxController {
       final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/notifications');
       final response = await http.get(
         url,
-        headers: {'ngrok-skip-browser-warning': 'true'},
+        headers: {
+          ...ApiConfig.getHeaders(),
+          'ngrok-skip-browser-warning': 'true',
+        },
       );
 
       if (response.statusCode == 200) {
