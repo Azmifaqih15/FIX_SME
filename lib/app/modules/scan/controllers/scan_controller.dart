@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../routes/app_pages.dart';
 import 'package:smart_sme_app/app/data/api_config.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
+import '../../notification/controllers/notification_controller.dart';
 import 'package:get_storage/get_storage.dart';
 
 class ScanController extends GetxController {
@@ -173,6 +174,11 @@ class ScanController extends GetxController {
           Get.find<DashboardController>().fetchMonthlyProfit();
         }
 
+        // Refresh Notifications
+        if (Get.isRegistered<NotificationController>()) {
+          Get.find<NotificationController>().fetchNotifications();
+        }
+
         // Baru setelah itu bersihkan form input
         resetForm();
         selectedImagePath.value = '';
@@ -267,6 +273,11 @@ class ScanController extends GetxController {
         // Refresh Activity Log
         if (Get.isRegistered<ActivityLogController>()) {
           Get.find<ActivityLogController>().fetchLogs();
+        }
+
+        // Refresh Notifications
+        if (Get.isRegistered<NotificationController>()) {
+          Get.find<NotificationController>().fetchNotifications();
         }
 
         // Bersihkan semua form
