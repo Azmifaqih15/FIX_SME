@@ -42,7 +42,7 @@ class PriceService {
   Future<List<Map<String, dynamic>>> getPriceRecommendation() async {
     try {
       final response = await http.get(
-        Uri.parse('${baseUrl}rekomendasi'),
+        Uri.parse('${ApiConfig.BASE_URL}/market/analysis'),
         headers: {
           ...ApiConfig.getHeaders(),
           "ngrok-skip-browser-warning": "true",
@@ -50,8 +50,17 @@ class PriceService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> decodedData = jsonDecode(response.body);
-        return decodedData.map((item) => item as Map<String, dynamic>).toList();
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        // Memastikan respon memiliki key 'data' (format baru dari endpoint analysis)
+        if (responseData.containsKey('data') && responseData['data'] is List) {
+          final List<dynamic> decodedData = responseData['data'];
+          return decodedData.map((item) => item as Map<String, dynamic>).toList();
+        } else {
+          // Fallback jika API mengembalikan langsung sebuah list
+          final List<dynamic> decodedData = jsonDecode(response.body);
+          return decodedData.map((item) => item as Map<String, dynamic>).toList();
+        }
       } else {
         throw Exception(
             "Gagal memuat data rekomendasi. Kode Status: ${response.statusCode}");
