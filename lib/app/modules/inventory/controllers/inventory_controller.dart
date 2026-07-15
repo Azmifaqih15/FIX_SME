@@ -182,7 +182,10 @@ class InventoryController extends GetxController {
       
       final response = await http.get(
         Uri.parse(urlString),
-        headers: headers,
+        headers: {
+          ...ApiConfig.getHeaders(),
+          'ngrok-skip-browser-warning': 'true',
+        },
       );
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);

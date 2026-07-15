@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../controllers/market_controller.dart';
 
 class MarketView extends GetView<MarketController> {
@@ -97,10 +98,10 @@ class MarketView extends GetView<MarketController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildInfoColumn('Yours', data.hargaJualSaatIni.toDouble()),
-              _buildInfoColumn('Modal', data.hppInternal.toDouble(), isModal: true),
-              _buildInfoColumn('Rata2', data.rataRataPasar),
-              _buildInfoColumn('Saran', data.rekomendasiHargaJual),
+              _buildInfoColumn('Yours', data.hargaJualSaatIni.toDouble(), isYoursOrModal: true),
+              _buildInfoColumn('Modal', data.hppInternal.toDouble(), isYoursOrModal: true, isModal: true),
+              _buildInfoColumn('Rata2', data.rataRataPasar, isRataOrSaran: true),
+              _buildInfoColumn('Saran', data.rekomendasiHargaJual, isRataOrSaran: true),
             ],
           ),
         ],
@@ -148,14 +149,21 @@ class MarketView extends GetView<MarketController> {
     );
   }
 
-  String _formatK(double price) {
-    if (price <= 0) return '?';
+  String _formatK(double price, bool isYoursOrModal, bool isRataOrSaran) {
+    if (price <= 0 && isYoursOrModal) return '-';
+    if (price <= 0 && isRataOrSaran) return 'Rp 0';
+    
+    if (isRataOrSaran) {
+      final formatCurrency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+      return formatCurrency.format(price);
+    }
+    
     int kValue = (price / 1000).round();
     return 'Rp ${kValue}k';
   }
 
-  Widget _buildInfoColumn(String label, double price, {bool isModal = false}) {
-    String priceText = _formatK(price);
+  Widget _buildInfoColumn(String label, double price, {bool isModal = false, bool isYoursOrModal = false, bool isRataOrSaran = false}) {
+    String priceText = _formatK(price, isYoursOrModal, isRataOrSaran);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

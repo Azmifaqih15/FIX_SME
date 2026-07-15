@@ -386,22 +386,8 @@ class DashboardController extends GetxController {
 
   Future<void> fetchDashboardSummary() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('user_id');
-      String? token = prefs.getString('token');
-
-      String urlString = '${ApiConfig.BASE_URL}/dashboard/summary';
-      if (userId != null) {
-          urlString += '?user_id=$userId';
-      }
-
-      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
-      if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-      }
-
-      final url = Uri.parse(urlString);
-      final response = await http.get(url, headers: headers);
+      final url = Uri.parse('${ApiConfig.BASE_URL}/dashboard/summary');
+      final response = await http.get(url, headers: ApiConfig.getHeaders());
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -426,22 +412,8 @@ class DashboardController extends GetxController {
 
   Future<void> fetchDashboardStats() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('user_id');
-      String? token = prefs.getString('token');
-
-      String urlString = '${ApiConfig.BASE_URL}/dashboard/stats';
-      if (userId != null) {
-          urlString += '?user_id=$userId';
-      }
-
-      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
-      if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-      }
-
-      final url = Uri.parse(urlString);
-      final response = await http.get(url, headers: headers);
+      final url = Uri.parse('${ApiConfig.BASE_URL}/dashboard/stats');
+      final response = await http.get(url, headers: ApiConfig.getHeaders());
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -457,22 +429,8 @@ class DashboardController extends GetxController {
 
   Future<void> fetchMonthlyProfit() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('user_id');
-      String? token = prefs.getString('token');
-
-      String urlString = '${ApiConfig.BASE_URL}/inventory/monthly-profit';
-      if (userId != null) {
-          urlString += '?user_id=$userId';
-      }
-
-      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
-      if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-      }
-
-      final url = Uri.parse(urlString);
-      final response = await http.get(url, headers: headers);
+      final url = Uri.parse('${ApiConfig.BASE_URL}/inventory/monthly-profit');
+      final response = await http.get(url, headers: ApiConfig.getHeaders());
       
       print('Data Profit JSON: ${response.body}');
 
