@@ -167,8 +167,20 @@ class AuthService extends GetConnect {
         });
       } catch (_) {}
     }
+    
+    // HAPUS SEMUA DATA USER DARI MEMORI LOKAL
     box.remove('access_token');
-    print("🚪 Logout: Token JWT telah dihapus.");
+    box.remove('user_name');
+    box.remove('email');
+    box.remove('user_photo');
+    box.remove('isLogin');
+    box.remove('is_google_login');
+    
+    // Hapus juga ID dari SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+    
+    print("🚪 Logout: Data pengguna dan Token JWT telah dihapus.");
   }
 
   /// 3. Autentikasi Biometrik Hardware (Matkul: Keamanan Data)
