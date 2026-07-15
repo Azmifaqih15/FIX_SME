@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:get_storage/get_storage.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_sme_app/app/data/providers/auth_provider.dart';
 import 'package:smart_sme_app/app/data/api_config.dart';
 
