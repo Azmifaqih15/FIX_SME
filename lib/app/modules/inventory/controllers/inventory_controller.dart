@@ -157,14 +157,32 @@ class InventoryController extends GetxController {
   Future<void> fetchInventory({String query = ''}) async {
     isLoading.value = true;
     try {
-      final urlString = query.isEmpty 
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('user_id');
+      String? token = prefs.getString('token');
+
+      String urlString = query.isEmpty 
           ? '${ApiConfig.BASE_URL}/inventory/all'
           : '${ApiConfig.BASE_URL}/inventory/all?search=$query';
           
+      if (userId != null) {
+          if (urlString.contains('?')) {
+              urlString += '&user_id=$userId';
+          } else {
+              urlString += '?user_id=$userId';
+          }
+      }
+          
       ApiConfig.logNetwork(urlString);
+      
+      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
+      if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+      }
+      
       final response = await http.get(
         Uri.parse(urlString),
-        headers: {'ngrok-skip-browser-warning': 'true'},
+        headers: headers,
       );
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);

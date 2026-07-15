@@ -2,7 +2,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../../routes/app_pages.dart'; // Pastikan path ke app_pages benar
+import '../../../routes/app_pages.dart';
+import 'package:smart_sme_app/app/data/api_config.dart';
 import 'package:smart_sme_app/app/data/services/price_service.dart'; // 🟢 1. SESUAIKAN IMPORT PRICE SERVICE
 import 'package:smart_sme_app/app/modules/inventory/controllers/inventory_controller.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -22,9 +23,6 @@ class DashboardController extends GetxController {
   var bestSellerName = "Tidak Ada".obs;
   var deadStockItems = <dynamic>[].obs;
 
-  var restockItemsCount = 3.obs;
-  var deadStockItemsCount = 2.obs;
-
   // New variables for Dashboard Stats API
   var totalInventory = 0.0.obs;
   var monthLabels = <String>[].obs;
@@ -37,43 +35,41 @@ class DashboardController extends GetxController {
   // State untuk Bar Chart (Performa Penjualan 12 Bulan)
   var monthlyProfits = List<double>.filled(12, 0.0).obs;
   var selectedMonthIndex = (-1).obs; // Indeks batang yang dipilih
-  var selectedMonth = 'All'.obs; // Filter bulan untuk Bar Chart
+  var selectedMonth = 'All'.obs; // Filter bulan string (lama)
+  var selectedMonthNum = DateTime.now().month.obs; // Filter bulan reaktif (baru)
   
-  bool get hasProfitData => monthlyProfits.any((profit) => profit > 0.0);
+  bool get hasProfitData {
+    if (selectedMonthNum.value >= 1 && selectedMonthNum.value <= 12) {
+      return monthlyProfits[selectedMonthNum.value - 1] > 0.0;
+    }
+    return monthlyProfits.any((profit) => profit > 0.0);
+  }
+  
+  void setSalesMonthFilter(int month) {
+    selectedMonthNum.value = month;
+  }
   
   // Menggunakan observable list agar UI reaktif saat data kosong atau bertambah
   var transactionHistory = <Map<String, dynamic>>[].obs;
 
   // 🟢 3. VARIABLE BARU UNTUK TREN & REKOMENDASI HARGA MONGODB
   var priceTrendData = <Map<String, dynamic>>[].obs;
+  var trendDates = <String>[].obs;
+  var trendSpotsByCategory = <String, List<FlSpot>>{}.obs;
   var recommendationData = <String, dynamic>{}.obs;
   var isLoadingTrend = false.obs;
   var isLoadingRecommendation = false.obs;
 
   // State untuk filter kategori LineChart
-  var selectedCategory = 'All'.obs;
+  RxString selectedCategoryFilter = 'All'.obs;
   final List<String> categories = ['All', 'Boxy Fit', 'Fitted', 'Oversize', 'Regular Fit'];
 
-  void changeCategory(String category) {
-    selectedCategory.value = category;
+  void setCategoryFilter(String category) {
+    selectedCategoryFilter.value = category;
   }
 
-  var priceAlerts = [
-    {
-      "name": "Kemeja Flanel L",
-      "marketAvg": "Rp 145.000",
-      "yourPrice": "Rp 155.000",
-      "diff": "+6% Above",
-      "status": "High"
-    },
-    {
-      "name": "Sepatu Sneakers V2",
-      "marketAvg": "Rp 210.000",
-      "yourPrice": "Rp 200.000",
-      "diff": "-5% Below",
-      "status": "Safe"
-    },
-  ].obs;
+  // Menampung alert harga, jika ada datanya dari backend.
+  var priceAlerts = <Map<String, dynamic>>[].obs;
 
   // --- FUNGSI NAVIGASI OTOMATIS ---
   @override
@@ -85,10 +81,18 @@ class DashboardController extends GetxController {
     loadUserData();
     fetchDashboardSummary();
     fetchDashboardStats();
+    fetchMonthlyProfit(); // 🟢 5. FETCH MONTHLY PROFIT
     fetchMarketData(); // 🟢 4. JALANKAN PENARIKAN DATA SCRAPING
     
-    // Hitung profit untuk Bar Chart
+    // Hitung profit untuk Bar Chart (cadangan jika tidak dari backend)
     calculateMonthlyProfits();
+    
+    // Binding agar chart recalculate tiap produk inventory berubah
+    ever(inventoryController.productList, (_) {
+      calculateCategoryChart();
+    });
+    // Panggil manual pertama kali
+    calculateCategoryChart();
   }
 
   // Menambahkan transaksi baru secara real-time (contoh dari Scan Out)
@@ -199,77 +203,77 @@ class DashboardController extends GetxController {
     return Get.put(InventoryController());
   }
 
-  int get dynamicGrandTotal {
-    return inventoryController.productList.fold(0, (sum, item) => sum + item.qty);
-  }
+  // State reaktif baru
+  var stockByCategory = <String, int>{}.obs;
+  var totalStock = 0.obs;
+  var chartSections = <PieChartSectionData>[].obs;
 
-  List<PieChartSectionData> get dynamicPieChartSections {
-    int grandTotal = dynamicGrandTotal;
+  void calculateCategoryChart() {
+    Map<String, int> tempStockByCategory = {};
+    int tempTotalStock = 0;
     
-    // Penanganan Empty State
-    if (grandTotal == 0) {
-      return [
+    for (var item in inventoryController.productList) {
+      // Normalisasi kategori ('BOXY FIT' dan 'boxy fit' akan jadi 'Boxy fit' dsb)
+      String category = item.category.toLowerCase().trim();
+      if (category.isEmpty) category = 'lainnya';
+      
+      // Rapikan jadi Kapital di awal
+      category = category.split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
+
+      tempStockByCategory[category] = (tempStockByCategory[category] ?? 0) + item.qty;
+      tempTotalStock += item.qty;
+    }
+
+    stockByCategory.assignAll(tempStockByCategory);
+    totalStock.value = tempTotalStock;
+
+    // Palette warna elegan
+    final List<Color> palette = [
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFFDC2626), // Red
+      const Color(0xFF6B7280), // Gray
+      const Color(0xFF4F46E5), // Indigo
+      const Color(0xFF0EA5E9), // Sky Blue
+      const Color(0xFF8B5CF6), // Violet
+      Colors.pink,
+      Colors.teal,
+    ];
+
+    List<PieChartSectionData> sections = [];
+    int colorIndex = 0;
+
+    if (tempTotalStock == 0) {
+      sections.add(
         PieChartSectionData(
           color: Colors.grey[300],
           value: 100,
           title: '0%',
           radius: 50,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.black54,
-          ),
+          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
         )
-      ];
+      );
+    } else {
+      tempStockByCategory.forEach((category, stock) {
+        if (stock > 0) {
+          double percentage = (stock / tempTotalStock) * 100;
+          Color color = palette[colorIndex % palette.length];
+          
+          sections.add(
+            PieChartSectionData(
+              color: color,
+              value: stock.toDouble(),
+              title: '${percentage.toStringAsFixed(1)}%',
+              radius: 50,
+              titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+            )
+          );
+          colorIndex++;
+        }
+      });
     }
 
-    Map<String, int> tempTotals = {
-      'Oversize': 0,
-      'Boxy Fit': 0,
-      'Fitted': 0,
-      'Regular Fit': 0
-    };
-
-    for (var item in inventoryController.productList) {
-      String cat = item.category;
-      if (tempTotals.containsKey(cat)) {
-        tempTotals[cat] = tempTotals[cat]! + item.qty;
-      } else {
-        tempTotals['Lainnya'] = (tempTotals['Lainnya'] ?? 0) + item.qty;
-      }
-    }
-
-    final Map<String, Color> categoryColors = {
-      'Oversize': const Color(0xFF10B981),
-      'Boxy Fit': const Color(0xFFF59E0B),
-      'Fitted': const Color(0xFFDC2626),
-      'Regular Fit': const Color(0xFF6B7280),
-      'Lainnya': Colors.purple,
-    };
-
-    List<PieChartSectionData> sections = [];
-    tempTotals.forEach((category, stock) {
-      if (stock > 0) {
-        double percentage = (stock / grandTotal) * 100;
-        Color color = categoryColors[category] ?? Colors.grey;
-
-        sections.add(
-          PieChartSectionData(
-            color: color,
-            value: stock.toDouble(),
-            title: '${percentage.toStringAsFixed(1)}%',
-            radius: 50,
-            titleStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          )
-        );
-      }
-    });
-
-    return sections;
+    chartSections.assignAll(sections);
   }
 
   // Mengambil Tren Harga & Rekomendasi
@@ -286,6 +290,7 @@ class DashboardController extends GetxController {
 
       // Membalikkan urutan (reverse) agar kronologinya pas dari bulan terlama ke terbaru
       priceTrendData.assignAll(data.reversed.toList());
+      _processTrendData();
     } catch (e) {
       print("Error mengambil tren harga MongoDB: $e");
     } finally {
@@ -293,11 +298,71 @@ class DashboardController extends GetxController {
     }
   }
 
+  void _processTrendData() {
+    if (priceTrendData.isEmpty) return;
+
+    // 1. Grouping data mentah ke dalam kategori
+    Map<String, List<Map<String, dynamic>>> itemsByCat = {};
+    for (String cat in categories) {
+      if (cat == 'All') continue;
+      itemsByCat[cat] = [];
+    }
+
+    // Pisahkan item ke masing-masing array kategori
+    // priceTrendData sudah di-reverse (dari lama ke baru)
+    for (var item in priceTrendData) {
+      String cat = item['kategori']?.toString() ?? item['category']?.toString() ?? '';
+      
+      // Normalisasi nama kategori (cocokkan dengan array categories)
+      String normalizedCat = categories.firstWhere(
+        (c) => c.toLowerCase() == cat.toLowerCase(),
+        orElse: () => '',
+      );
+
+      if (normalizedCat.isNotEmpty && normalizedCat != 'All') {
+        itemsByCat[normalizedCat]!.add(item);
+      }
+    }
+    
+    // 2. Mapping ke FlSpot dengan index sekuensial (0, 1, 2, ...) agar tidak menumpuk di 1 X
+    Map<String, List<FlSpot>> spotsByCat = {};
+    int maxDataLength = 0;
+
+    for (String cat in itemsByCat.keys) {
+      List<FlSpot> spots = [];
+      var items = itemsByCat[cat]!;
+      
+      if (items.length > maxDataLength) {
+        maxDataLength = items.length;
+      }
+      
+      for (int i = 0; i < items.length; i++) {
+        num harga = items[i]['rata_rata_pasar'] ?? items[i]['price'] ?? items[i]['harga'] ?? 0;
+        spots.add(FlSpot(i.toDouble(), harga.toDouble()));
+      }
+      spotsByCat[cat] = spots;
+    }
+
+    // Generate label sumbu X (Hanya label generik atau ambil dari data jika ada)
+    List<String> labels = [];
+    for (int i = 0; i < maxDataLength; i++) {
+      labels.add("Data ${i + 1}");
+    }
+    trendDates.assignAll(labels);
+
+    trendSpotsByCategory.assignAll(spotsByCat);
+  }
+
   void fetchRecommendation() async {
     try {
       isLoadingRecommendation(true);
       var data = await _priceService.getPriceRecommendation();
-      recommendationData.assignAll(data);
+      if (data.isNotEmpty) {
+        // Ambil data pertama saja untuk ditampilkan di Dashboard
+        recommendationData.assignAll(data.first);
+      } else {
+        recommendationData.clear();
+      }
     } catch (e) {
       print("Error mengambil data rekomendasi MongoDB: $e");
     } finally {
@@ -321,9 +386,22 @@ class DashboardController extends GetxController {
 
   Future<void> fetchDashboardSummary() async {
     try {
-      final url = Uri.parse(
-          'https://backend-sme.up.railway.app/api/v1/dashboard/summary');
-      final response = await http.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('user_id');
+      String? token = prefs.getString('token');
+
+      String urlString = '${ApiConfig.BASE_URL}/dashboard/summary';
+      if (userId != null) {
+          urlString += '?user_id=$userId';
+      }
+
+      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
+      if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+      }
+
+      final url = Uri.parse(urlString);
+      final response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -348,35 +426,77 @@ class DashboardController extends GetxController {
 
   Future<void> fetchDashboardStats() async {
     try {
-      // Use standard localhost URL for flutter run or adjust as per environment
-      // Assuming ngrok domain was used, we will use the same domain for consistency or standard loopback if needed.
-      // I will use the same ngrok base URL used in fetchDashboardSummary.
-      final url = Uri.parse('https://backend-sme.up.railway.app/api/v1/dashboard/stats');
-      final response = await http.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('user_id');
+      String? token = prefs.getString('token');
+
+      String urlString = '${ApiConfig.BASE_URL}/dashboard/stats';
+      if (userId != null) {
+          urlString += '?user_id=$userId';
+      }
+
+      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
+      if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+      }
+
+      final url = Uri.parse(urlString);
+      final response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         
-        // Convert to double as requested by RxDouble
         if (data['total_inventory'] != null) {
           totalInventory.value = (data['total_inventory'] as num).toDouble();
         }
-
-        if (data['profit_data'] != null) {
-          List<dynamic> rawProfits = data['profit_data'];
-          monthlyProfits.assignAll(rawProfits.map((e) => (e as num).toDouble()).toList());
-        }
-
-        if (data['labels'] != null) {
-          List<dynamic> rawLabels = data['labels'];
-          monthLabels.assignAll(rawLabels.map((e) => e.toString()).toList());
-        }
-        
-      } else {
-        print("Gagal mengambil data stats: ${response.statusCode}");
       }
     } catch (e) {
       print("Error mengambil data stats: $e");
+    }
+  }
+
+  Future<void> fetchMonthlyProfit() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('user_id');
+      String? token = prefs.getString('token');
+
+      String urlString = '${ApiConfig.BASE_URL}/inventory/monthly-profit';
+      if (userId != null) {
+          urlString += '?user_id=$userId';
+      }
+
+      Map<String, String> headers = {'ngrok-skip-browser-warning': 'true'};
+      if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+      }
+
+      final url = Uri.parse(urlString);
+      final response = await http.get(url, headers: headers);
+      
+      print('Data Profit JSON: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        List<double> newProfits = List.filled(12, 0.0); // Aman: default 0.0
+
+        if (data is List) {
+          for (var item in data) {
+            int? month = item['month'];
+            // Tangkap key total_profit, profit, atau total_revenue
+            num? profit = item['total_profit'] ?? item['profit'] ?? item['total_revenue'];
+            
+            if (month != null && month >= 1 && month <= 12 && profit != null) {
+              newProfits[month - 1] = profit.toDouble();
+            }
+          }
+        }
+        monthlyProfits.assignAll(newProfits);
+      } else {
+        print("Gagal mengambil monthly profit: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error mengambil monthly profit: $e");
     }
   }
 
