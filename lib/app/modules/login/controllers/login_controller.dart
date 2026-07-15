@@ -183,13 +183,20 @@ class LoginController extends GetxController {
           if (data != null) {
             String token = data['access_token'] ?? "";
             String name = data['data'] != null ? data['data']['name'] : "User";
+            String backendPhotoUrl = data['data'] != null && data['data']['photo_url'] != null ? data['data']['photo_url'] : "";
+            
             var userIdRaw = data['data'] != null ? data['data']['id'] : null;
             String userIdStr = userIdRaw != null ? userIdRaw.toString() : "";
+            
+            // Prioritaskan URL backend, jika kosong pakai photo dari akun Google
+            String finalPhotoUrl = (backendPhotoUrl.isNotEmpty) ? backendPhotoUrl : (googleUser.photoUrl ?? "");
             
             box.write('isLogin', true);
             box.write('is_google_login', true);
             box.write('user_name', name);
             box.write('email', emailAddress);
+            box.write('user_photo', finalPhotoUrl);
+            
             if (userIdStr.isNotEmpty) {
               SharedPreferences prefs = await SharedPreferences.getInstance();
               await prefs.setString('user_id', userIdStr);
