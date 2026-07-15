@@ -293,7 +293,15 @@ class ProfileController extends GetxController {
 
       // Jika ada file foto baru yang dipilih
       if (newPhotoPath.isNotEmpty && !newPhotoPath.startsWith('http')) {
-        request.files.add(await http.MultipartFile.fromPath('profile_picture', newPhotoPath));
+        String fileName = newPhotoPath.split('/').last;
+        if (!fileName.contains('.')) {
+          fileName = '$fileName.jpg';
+        }
+        request.files.add(await http.MultipartFile.fromPath(
+          'profile_picture', 
+          newPhotoPath,
+          filename: fileName,
+        ));
       }
 
       var streamedResponse = await request.send();
@@ -303,7 +311,11 @@ class ProfileController extends GetxController {
         var jsonResponse = jsonDecode(response.body);
         
         // Ekstrak name dan photo_url dari JSON response
-        String newPhotoUrl = jsonResponse['data']?['photo_url'] ?? newPhotoPath;
+        String? serverUrl = jsonResponse['data']?['photo_url'];
+        String newPhotoUrl = (serverUrl != null && serverUrl.toString().startsWith('http')) 
+            ? serverUrl 
+            : newPhotoPath;
+            
         String serverName = jsonResponse['data']?['name'] ?? newName;
         
         // SIMPAN KE MEMORI: Timpa data lama
