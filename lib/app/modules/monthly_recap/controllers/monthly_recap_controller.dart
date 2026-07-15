@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
-import 'package:smart_sme_app/app/data/services/api_config.dart';
+import 'package:smart_sme_app/app/data/api_config.dart';
 import 'package:smart_sme_app/app/modules/inventory/controllers/inventory_controller.dart';
 import 'package:smart_sme_app/app/modules/activity_log/controllers/activity_log_controller.dart';
 import 'package:smart_sme_app/app/modules/inventory/controllers/inventory_controller.dart' as inv;

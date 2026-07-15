@@ -278,13 +278,20 @@ class InventoryController extends GetxController {
       ApiConfig.logNetwork('$baseUrl/$id');
       final response = await http.delete(
         Uri.parse('$baseUrl/$id'),
-        headers: {'ngrok-skip-browser-warning': 'true'},
+        headers: {
+          ...ApiConfig.getHeaders(),
+          'ngrok-skip-browser-warning': 'true',
+        },
       );
       if (response.statusCode == 200) {
         await fetchInventory();
+        Get.snackbar("Sukses", "Produk berhasil dihapus");
+      } else {
+        Get.snackbar("Gagal", "Gagal menghapus produk: ${response.statusCode}");
       }
     } catch (e) {
       print('Error deleting product: $e');
+      Get.snackbar("Error", "Terjadi kesalahan saat menghapus produk");
     }
   }
 
